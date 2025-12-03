@@ -4,6 +4,7 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { supabaseAdmin } from '../_shared/supabaseClient.ts';
+import { authenticateAdmin } from '../_shared/auth.ts';
 
 serve(async (_req) => {
   if (_req.method === 'OPTIONS') {
@@ -11,6 +12,9 @@ serve(async (_req) => {
   }
 
   try {
+    // Authenticate admin user
+    const admin = await authenticateAdmin(_req);
+    
     console.log('Starting database connection test...');
     
     // Test 1: Check database connection by querying pg_tables

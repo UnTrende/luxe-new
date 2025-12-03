@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import { Barber } from '../../types';
 import { api } from '../../services/api';
 import { ImageUpload } from '../../components/ImageUpload';
+import { Plus, Edit2, Trash2, Mail, Scissors, User } from 'lucide-react';
 
 interface AdminBarbersManagerProps {
     barbers: Barber[];
@@ -98,22 +99,26 @@ export const AdminBarbersManager: React.FC<AdminBarbersManagerProps> = ({ barber
         <div>
             <div className="flex justify-between items-center mb-8">
                 <div>
-                    <h2 className="text-2xl font-serif font-bold text-dubai-black">Staff Management</h2>
-                    <p className="text-gray-500 text-sm mt-1">Manage your team of expert barbers</p>
+                    <h2 className="text-3xl font-serif font-bold text-white">Staff Management</h2>
+                    <p className="text-subtle-text text-sm mt-1">Manage your team of expert barbers</p>
                 </div>
                 <button
                     onClick={() => openModal()}
-                    className="bg-dubai-gold text-dubai-black px-6 py-3 rounded-xl font-bold text-sm hover:bg-white transition-all shadow-md hover:shadow-lg"
+                    className="bg-gold text-black px-6 py-3 rounded-xl font-bold text-sm hover:bg-white transition-all shadow-glow flex items-center gap-2"
                 >
-                    + Add Barber
+                    <Plus size={18} />
+                    <span>Add Barber</span>
                 </button>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
                 {barbers.map((barber) => (
-                    <div key={barber.id} className="bg-white rounded-3xl p-6 border border-gray-100 shadow-lg shadow-gray-200/50 group hover:border-dubai-gold/50 transition-all">
-                        <div className="flex items-start justify-between mb-6">
-                            <div className="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center overflow-hidden border border-gray-200">
+                    <div key={barber.id} className="bg-glass-card rounded-[2rem] p-6 border border-white/10 relative overflow-hidden group hover:border-gold/50 transition-all duration-500 hover:-translate-y-1">
+                        {/* Glow Effect */}
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-gold/10 blur-[50px] rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                        <div className="flex items-start justify-between mb-6 relative z-10">
+                            <div className="w-20 h-20 rounded-2xl bg-black/40 flex items-center justify-center overflow-hidden border border-white/10 group-hover:border-gold/50 transition-colors">
                                 {barber.photo ? (
                                     <img
                                         src={barber.photo}
@@ -125,93 +130,100 @@ export const AdminBarbersManager: React.FC<AdminBarbersManagerProps> = ({ barber
                                         }}
                                     />
                                 ) : (
-                                    <span className="text-2xl font-serif font-bold text-gray-400">{barber.name.charAt(0)}</span>
+                                    <User className="text-white/20" size={32} />
                                 )}
                             </div>
                             <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <button
                                     onClick={() => openModal(barber)}
-                                    className="p-2 rounded-lg bg-gray-100 hover:bg-dubai-gold hover:text-dubai-black text-gray-500 transition-colors"
+                                    className="p-2 rounded-lg bg-white/5 hover:bg-gold hover:text-black text-subtle-text transition-colors"
                                 >
-                                    Edit
+                                    <Edit2 size={16} />
                                 </button>
                                 <button
                                     onClick={() => handleBarberDelete(barber.id, barber.user_id)}
-                                    className="p-2 rounded-lg bg-gray-100 hover:bg-red-500 hover:text-white text-gray-500 transition-colors"
+                                    className="p-2 rounded-lg bg-white/5 hover:bg-red-500 hover:text-white text-subtle-text transition-colors"
                                 >
-                                    Delete
+                                    <Trash2 size={16} />
                                 </button>
                             </div>
                         </div>
 
-                        <h3 className="text-xl font-serif font-bold text-dubai-black mb-1">{barber.name}</h3>
-                        <p className="text-gray-500 text-sm mb-4">{barber.email}</p>
+                        <h3 className="text-xl font-serif font-bold text-white mb-1 group-hover:text-gold transition-colors">{barber.name}</h3>
+                        <div className="flex items-center gap-2 text-subtle-text text-sm mb-4">
+                            <Mail size={14} />
+                            <span>{barber.email}</span>
+                        </div>
 
                         <div className="flex flex-wrap gap-2 mb-6">
                             {barber.specialties?.map((specialty, index) => (
                                 <span
                                     key={index}
-                                    className="px-3 py-1 rounded-full bg-gray-100 border border-gray-200 text-xs font-bold text-gray-600 uppercase tracking-wide"
+                                    className="px-3 py-1 rounded-lg bg-white/5 border border-white/10 text-xs font-bold text-subtle-text uppercase tracking-wide group-hover:border-gold/20 transition-colors"
                                 >
                                     {specialty}
                                 </span>
                             ))}
                         </div>
 
-                        <div className="pt-4 border-t border-gray-100 flex justify-between items-center">
-                            <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded border border-green-200">Active</span>
-                            <span className="text-xs text-gray-400 font-mono">ID: {barber.id.slice(0, 6)}</span>
+                        <div className="pt-4 border-t border-white/10 flex justify-between items-center">
+                            <span className="text-xs font-bold text-green-400 bg-green-400/10 px-2 py-1 rounded border border-green-400/20">Active</span>
+                            <span className="text-xs text-white/20 font-mono">ID: {barber.id.slice(0, 6)}</span>
                         </div>
                     </div>
                 ))}
             </div>
 
             {barbers.length === 0 && (
-                <div className="text-center py-16 bg-white rounded-3xl border border-gray-100 shadow-xl shadow-gray-200/50">
-                    <p className="text-gray-500 text-lg">No barbers found.</p>
+                <div className="text-center py-16 bg-glass-card rounded-[2rem] border border-white/10">
+                    <p className="text-subtle-text text-lg">No barbers found.</p>
                 </div>
             )}
 
             {/* Barber Modal */}
             {isBarberModalOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-                    <div className="bg-white rounded-3xl p-8 max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-100 animate-in zoom-in-95 duration-200">
-                        <h3 className="text-2xl font-serif font-bold text-dubai-black mb-6">
-                            {currentBarber ? 'Edit Barber' : 'Add New Barber'}
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in">
+                    <div className="bg-glass-card rounded-[2rem] p-10 max-w-lg w-full max-h-[90vh] overflow-y-auto border border-white/10 shadow-2xl animate-scale-in relative">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold to-transparent opacity-50" />
+
+                        <h3 className="text-3xl font-serif font-bold text-white mb-8 text-center">
+                            {currentBarber ? 'Edit Barber' : 'New Barber'}
                         </h3>
 
-                        <form onSubmit={barberForm.handleSubmit(handleBarberSubmit)} className="space-y-5">
+                        <form onSubmit={barberForm.handleSubmit(handleBarberSubmit)} className="space-y-6">
                             {/* Barber Photo Upload */}
                             <div>
-                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
+                                <label className="block text-xs font-bold uppercase tracking-widest text-subtle-text mb-2">
                                     Barber Photo
                                 </label>
-                                <ImageUpload
-                                    onImageUploaded={(publicUrl: string, imagePath: string) => {
-                                        setBarberPhotoPath(imagePath);
-                                        setBarberPhotoUrl(publicUrl);
-                                    }}
-                                    currentImageUrl={barberPhotoUrl || currentBarber?.photo}
-                                    bucket="luxecut-photos"
-                                    folder="barbers"
-                                    entityType="barber"
-                                    entityId={currentBarber?.id}
-                                />
+                                <div className="bg-black/20 rounded-xl p-2 border border-white/5">
+                                    <ImageUpload
+                                        onImageUploaded={(publicUrl: string, imagePath: string) => {
+                                            setBarberPhotoPath(imagePath);
+                                            setBarberPhotoUrl(publicUrl);
+                                        }}
+                                        currentImageUrl={barberPhotoUrl || currentBarber?.photo}
+                                        bucket="luxecut-photos"
+                                        folder="barbers"
+                                        entityType="barber"
+                                        entityId={currentBarber?.id}
+                                    />
+                                </div>
                             </div>
 
                             {/* Barber Name */}
-                            <div>
-                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Name *</label>
+                            <div className="group">
+                                <label className="block text-xs font-bold uppercase tracking-widest text-subtle-text mb-2 group-focus-within:text-gold transition-colors">Name *</label>
                                 <input
                                     {...barberForm.register('name', { required: 'Name is required' })}
-                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-dubai-black focus:border-dubai-gold focus:ring-1 focus:ring-dubai-gold/20 focus:outline-none transition-all placeholder:text-gray-400"
+                                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-4 text-white focus:border-gold focus:ring-1 focus:ring-gold/20 focus:outline-none transition-all placeholder:text-white/20"
                                     placeholder="e.g., John Smith"
                                 />
                             </div>
 
                             {/* Email */}
-                            <div>
-                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Email *</label>
+                            <div className="group">
+                                <label className="block text-xs font-bold uppercase tracking-widest text-subtle-text mb-2 group-focus-within:text-gold transition-colors">Email *</label>
                                 <input
                                     type="email"
                                     {...barberForm.register('email', {
@@ -221,15 +233,15 @@ export const AdminBarbersManager: React.FC<AdminBarbersManagerProps> = ({ barber
                                             message: 'Invalid email format'
                                         }
                                     })}
-                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-dubai-black focus:border-dubai-gold focus:ring-1 focus:ring-dubai-gold/20 focus:outline-none transition-all placeholder:text-gray-400"
+                                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-4 text-white focus:border-gold focus:ring-1 focus:ring-gold/20 focus:outline-none transition-all placeholder:text-white/20"
                                     placeholder="john@luxecut.com"
                                 />
                             </div>
 
                             {/* Password - Only for new barbers */}
                             {!currentBarber && (
-                                <div>
-                                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Password *</label>
+                                <div className="group">
+                                    <label className="block text-xs font-bold uppercase tracking-widest text-subtle-text mb-2 group-focus-within:text-gold transition-colors">Password *</label>
                                     <input
                                         type="password"
                                         {...barberForm.register('password', {
@@ -239,18 +251,18 @@ export const AdminBarbersManager: React.FC<AdminBarbersManagerProps> = ({ barber
                                                 message: 'Password must be at least 6 characters'
                                             }
                                         })}
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-dubai-black focus:border-dubai-gold focus:ring-1 focus:ring-dubai-gold/20 focus:outline-none transition-all placeholder:text-gray-400"
+                                        className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-4 text-white focus:border-gold focus:ring-1 focus:ring-gold/20 focus:outline-none transition-all placeholder:text-white/20"
                                         placeholder="••••••••"
                                     />
                                 </div>
                             )}
 
                             {/* Specialties */}
-                            <div>
-                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Specialties</label>
+                            <div className="group">
+                                <label className="block text-xs font-bold uppercase tracking-widest text-subtle-text mb-2 group-focus-within:text-gold transition-colors">Specialties</label>
                                 <input
                                     {...barberForm.register('specialties')}
-                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-dubai-black focus:border-dubai-gold focus:ring-1 focus:ring-dubai-gold/20 focus:outline-none transition-all placeholder:text-gray-400"
+                                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-4 text-white focus:border-gold focus:ring-1 focus:ring-gold/20 focus:outline-none transition-all placeholder:text-white/20"
                                     placeholder="Fades, Classic Cuts, Beard Styling (comma separated)"
                                     onChange={(e) => {
                                         // Convert comma-separated string to array
@@ -262,24 +274,18 @@ export const AdminBarbersManager: React.FC<AdminBarbersManagerProps> = ({ barber
                             </div>
 
                             {/* Bio */}
-                            <div>
-                                <label className="block text-xs font-bold uppercase tracking-widest text-subtle-text mb-2">Bio</label>
+                            <div className="group">
+                                <label className="block text-xs font-bold uppercase tracking-widest text-subtle-text mb-2 group-focus-within:text-gold transition-colors">Bio</label>
                                 <textarea
                                     {...barberForm.register('bio')} // Bio is not in Barber interface in types.ts but used in form?
                                     rows={3}
-                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-dubai-black focus:border-dubai-black focus:ring-1 focus:ring-dubai-black/10 focus:outline-none transition-all"
+                                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-4 text-white focus:border-gold focus:ring-1 focus:ring-gold/20 focus:outline-none transition-all placeholder:text-white/20"
                                     placeholder="Brief description about the barber..."
                                 />
                             </div>
 
                             {/* Actions */}
-                            <div className="flex gap-3 pt-4">
-                                <button
-                                    type="submit"
-                                    className="flex-1 bg-dubai-gold text-dubai-black py-3 px-4 rounded-xl font-bold uppercase tracking-widest text-sm hover:bg-white transition-all shadow-lg"
-                                >
-                                    {currentBarber ? 'Update Barber' : 'Create Barber'}
-                                </button>
+                            <div className="flex gap-4 pt-6">
                                 <button
                                     type="button"
                                     onClick={() => {
@@ -289,9 +295,15 @@ export const AdminBarbersManager: React.FC<AdminBarbersManagerProps> = ({ barber
                                         setBarberPhotoPath('');
                                         setBarberPhotoUrl('');
                                     }}
-                                    className="flex-1 bg-transparent text-gray-500 border border-gray-200 py-3 px-4 rounded-xl font-bold uppercase tracking-widest text-sm hover:bg-gray-50 hover:text-dubai-black transition-all"
+                                    className="flex-1 bg-transparent text-subtle-text border border-white/10 py-4 px-6 rounded-xl font-bold uppercase tracking-widest text-sm hover:bg-white/5 hover:text-white transition-all"
                                 >
                                     Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="flex-1 bg-gold text-black py-4 px-6 rounded-xl font-bold uppercase tracking-widest text-sm hover:bg-white transition-all shadow-glow"
+                                >
+                                    {currentBarber ? 'Save Changes' : 'Create Barber'}
                                 </button>
                             </div>
                         </form>

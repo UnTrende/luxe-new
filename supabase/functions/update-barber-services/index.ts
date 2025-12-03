@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { supabaseAdmin } from '../_shared/supabaseClient.ts';
 import { corsHeaders as sharedCorsHeaders } from '../_shared/cors.ts';
+import { authenticateAdmin } from '../_shared/auth.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,6 +14,9 @@ serve(async (req) => {
   }
 
   try {
+    // Authenticate admin user
+    const admin = await authenticateAdmin(req);
+    
     const { barberId, services } = await req.json();
     console.log('Updating services for barber:', barberId, services);
 

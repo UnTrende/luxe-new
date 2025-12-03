@@ -12,8 +12,12 @@
 }
 
 @layer base {
+    html {
+        scroll-behavior: smooth;
+    }
+
     body {
-        @apply bg-midnight text-white font-sans;
+        @apply bg-midnight text-white font-sans antialiased selection:bg-gold selection:text-midnight;
     }
 
     h1,
@@ -24,6 +28,20 @@
     h6 {
         @apply font-serif tracking-wide;
     }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+        @apply bg-midnight;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        @apply bg-white/10 rounded-full hover:bg-gold/50 transition-colors;
+    }
 }
 
 @layer utilities {
@@ -32,15 +50,17 @@
     }
 
     .bg-glass {
-        background-color: rgba(18, 18, 18, 0.6);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
+        background: rgba(18, 18, 18, 0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .bg-glass-card {
-        background-color: rgba(18, 18, 18, 0.8);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
+        background: rgba(18, 18, 18, 0.6);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
         background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
     }
 
@@ -70,5 +90,9 @@
 
     .shadow-glow {
         box-shadow: 0 0 20px rgba(212, 175, 55, 0.15);
+    }
+
+    .shadow-glass {
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
     }
 }

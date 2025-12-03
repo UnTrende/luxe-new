@@ -63,3 +63,57 @@ cleanup_*.sql
 # ============================================
 archive/
 backups/
+.env
+.env.local
+node_modules/
+
+# ============================================
+# Security - Environment Files (CRITICAL)
+# ============================================
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+
+# ============================================
+# Temporary Files
+# ============================================
+tmp_*
+temp_*
+*.tmp
+*.temp
+*.backup
+*.old
+*.bak
+
+# ============================================
+# Supabase
+# ============================================
+supabase/.temp/
+.supabase/
+
+# ============================================
+# SQL Debug Files
+# ============================================
+debug_*.sql
+test_*.sql
+check_*.sql
+verify_*.sql
+cleanup_*.sql
+
+# ============================================
+# Archive & Backups
+# ============================================
+archive/
+backups/
+
+# ============================================
+# Generated Files
+# ============================================
+*.png
+*.jpg
+*.jpeg
+!public/*.png
+!public/*.jpg
+!public/*.jpeg

@@ -18,6 +18,20 @@ import { AdminRosterManager } from '../components/admin/AdminRosterManager';
 import { AdminAttendanceManager } from '../components/admin/AdminAttendanceManager';
 import { AdminSettings } from '../components/admin/AdminSettings';
 import { AdminAnalytics } from '../components/admin/AdminAnalytics';
+import AdminLoyaltyDashboard from '../components/admin/AdminLoyaltyDashboard';
+import {
+  LayoutDashboard,
+  Scissors,
+  ShoppingBag,
+  Users,
+  Calendar,
+  ClipboardList,
+  Clock,
+  Settings,
+  BarChart3,
+  Package,
+  Star
+} from 'lucide-react';
 
 export default function AdminDashboardPageNew() {
   console.log('🎯 NEW AdminDashboard: Component mounting safely!');
@@ -146,8 +160,8 @@ export default function AdminDashboardPageNew() {
         const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
         const newBookingsCount = (bookingsData || []).filter(b => {
           // Use createdAt if available (after migration), otherwise use date
-          const bookingDate = b.createdAt 
-            ? new Date(b.createdAt) 
+          const bookingDate = b.createdAt
+            ? new Date(b.createdAt)
             : new Date(b.date);
           return bookingDate > oneDayAgo;
         }).length;
@@ -251,65 +265,73 @@ export default function AdminDashboardPageNew() {
   }
 
   const menuItems = [
-    { id: 'Overview', icon: '📊', label: 'Overview' },
-    { id: 'Services', icon: '✂️', label: 'Services' },
-    { id: 'Products', icon: '🛍️', label: 'Products' },
-    { id: 'Barbers', icon: '💈', label: 'Barbers' },
-    { id: 'Users', icon: '👥', label: 'Users' },
-    { id: 'Bookings', icon: '📅', label: 'Bookings' },
-    { id: 'Rosters', icon: '📋', label: 'Rosters' },
-    { id: 'Attendance', icon: '⏱️', label: 'Attendance' },
-    { id: 'Orders', icon: '📦', label: 'Orders' },
-    { id: 'Settings', icon: '⚙️', label: 'Settings' },
-    { id: 'Analytics', icon: '📈', label: 'Analytics' },
+    { id: 'Overview', icon: <LayoutDashboard size={20} />, label: 'Overview' },
+    { id: 'Services', icon: <Scissors size={20} />, label: 'Services' },
+    { id: 'Products', icon: <ShoppingBag size={20} />, label: 'Products' },
+    { id: 'Barbers', icon: <Users size={20} />, label: 'Barbers' },
+    { id: 'Users', icon: <Users size={20} />, label: 'Clients' },
+    { id: 'Bookings', icon: <Calendar size={20} />, label: 'Bookings' },
+    { id: 'Rosters', icon: <ClipboardList size={20} />, label: 'Rosters' },
+    { id: 'Attendance', icon: <Clock size={20} />, label: 'Attendance' },
+    { id: 'Orders', icon: <Package size={20} />, label: 'Orders' },
+    { id: 'Settings', icon: <Settings size={20} />, label: 'Settings' },
+    { id: 'Analytics', icon: <BarChart3 size={20} />, label: 'Analytics' },
+    { id: 'Loyalty', icon: <Star size={20} />, label: 'Loyalty' },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex font-sans text-dubai-black selection:bg-dubai-gold selection:text-black">
-      <ToastContainer theme="light" position="bottom-right" aria-label="Notifications" />
+    <div className="min-h-screen bg-midnight-gradient flex font-sans text-white selection:bg-gold selection:text-black overflow-hidden">
+      <ToastContainer theme="dark" position="bottom-right" aria-label="Notifications" />
 
-      {/* Sidebar */}
-      <aside className="w-72 bg-white text-dubai-black flex-shrink-0 fixed h-full z-20 hidden lg:flex flex-col border-r border-gray-200 shadow-xl shadow-gray-200/50">
-        <div className="p-8 border-b border-gray-100">
-          <h1 className="text-3xl font-serif font-bold text-dubai-black tracking-wider">LUXECUT</h1>
-          <p className="text-xs text-dubai-gold uppercase tracking-[0.2em] mt-1 font-bold">Admin Dashboard</p>
+      {/* Glassmorphism Sidebar */}
+      <aside className="w-72 bg-glass-card flex-shrink-0 fixed h-full z-20 hidden lg:flex flex-col border-r border-white/5 shadow-glass backdrop-blur-xl">
+        <div className="p-8 border-b border-white/5 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gold-gradient opacity-0 group-hover:opacity-5 transition-opacity duration-500" />
+          <h1 className="text-3xl font-serif font-bold text-white tracking-wider relative z-10">LUXECUT</h1>
+          <p className="text-xs text-gold uppercase tracking-[0.3em] mt-1 font-bold relative z-10">Empire View</p>
         </div>
 
-        <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1 custom-scrollbar">
-          {menuItems.map((item) => (
+        <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-2 custom-scrollbar">
+          {menuItems.map((item, index) => (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center gap-4 px-6 py-4 rounded-xl transition-all duration-300 group ${activeTab === item.id
-                ? 'bg-dubai-black text-white font-bold shadow-lg shadow-black/20 transform scale-[1.02]'
-                : 'text-gray-500 hover:bg-gray-50 hover:text-dubai-black'
+              style={{ animationDelay: `${index * 50}ms` }}
+              className={`w-full flex items-center gap-4 px-6 py-4 rounded-xl transition-all duration-300 group relative overflow-hidden animate-slide-up ${activeTab === item.id
+                ? 'text-midnight font-bold shadow-glow transform scale-[1.02]'
+                : 'text-subtle-text hover:text-white hover:bg-white/5'
                 }`}
             >
-              <span className={`text-xl transition-transform duration-300 ${activeTab === item.id ? 'text-dubai-gold' : 'text-gray-400 group-hover:text-dubai-black'}`}>{item.icon}</span>
-              <span className="uppercase tracking-wider text-xs">{item.label}</span>
               {activeTab === item.id && (
-                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-dubai-gold animate-pulse" />
+                <div className="absolute inset-0 bg-gold-gradient" />
+              )}
+
+              <span className={`text-xl relative z-10 transition-transform duration-300 group-hover:scale-110 ${activeTab === item.id ? 'text-midnight' : 'text-gold'}`}>{item.icon}</span>
+              <span className="uppercase tracking-wider text-xs relative z-10">{item.label}</span>
+
+              {activeTab === item.id && (
+                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-midnight animate-pulse relative z-10" />
               )}
             </button>
           ))}
         </nav>
 
-        <div className="p-6 border-t border-gray-100 bg-gray-50">
+        <div className="p-6 border-t border-white/5 bg-black/20 backdrop-blur-md">
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-10 h-10 rounded-full bg-dubai-black flex items-center justify-center text-dubai-gold font-bold shadow-md">
+            <div className="w-10 h-10 rounded-full bg-gold-gradient flex items-center justify-center text-midnight font-bold shadow-glow">
               {user?.email?.charAt(0).toUpperCase()}
             </div>
             <div className="overflow-hidden">
-              <p className="font-bold text-sm truncate text-dubai-black">{user?.email}</p>
-              <p className="text-xs text-green-600 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+              <p className="font-bold text-sm truncate text-white">{user?.email}</p>
+              <p className="text-xs text-green-400 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
                 Online
               </p>
             </div>
           </div>
           <button
             onClick={() => api.auth.signOut().then(() => navigate('/login'))}
-            className="w-full py-3 rounded-xl border border-gray-200 hover:bg-red-50 hover:border-red-200 hover:text-red-500 transition-all text-xs font-bold uppercase tracking-widest text-gray-500"
+            className="w-full py-3 rounded-xl border border-white/10 hover:bg-red-500/10 hover:border-red-500/50 hover:text-red-400 transition-all text-xs font-bold uppercase tracking-widest text-subtle-text"
           >
             Sign Out
           </button>
@@ -317,140 +339,149 @@ export default function AdminDashboardPageNew() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 lg:ml-72 min-h-screen">
+      <main className="flex-1 lg:ml-72 min-h-screen relative">
+        {/* Background Ambient Glow */}
+        <div className="fixed top-0 left-72 right-0 h-96 bg-gold/5 blur-[100px] pointer-events-none" />
+
         {/* Mobile Header */}
-        <header className="lg:hidden bg-white/90 backdrop-blur-md border-b border-gray-200 p-4 sticky top-0 z-30 flex justify-between items-center shadow-sm">
-          <span className="font-serif font-bold text-dubai-black text-xl tracking-wider">LUXECUT</span>
+        <header className="lg:hidden bg-glass-card border-b border-white/5 p-4 sticky top-0 z-30 flex justify-between items-center shadow-glass backdrop-blur-xl">
+          <span className="font-serif font-bold text-white text-xl tracking-wider">LUXECUT</span>
           <div className="relative">
             <select
               value={activeTab}
               onChange={(e) => setActiveTab(e.target.value)}
-              className="appearance-none bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 pr-8 text-sm font-bold text-dubai-black focus:outline-none focus:border-dubai-gold focus:ring-1 focus:ring-dubai-gold/50 transition-all"
+              className="appearance-none bg-black/50 border border-white/10 rounded-xl px-4 py-2 pr-8 text-sm font-bold text-white focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/50 transition-all"
             >
               {menuItems.map(item => (
-                <option key={item.id} value={item.id} className="bg-white text-dubai-black">
+                <option key={item.id} value={item.id} className="bg-card-bg text-white">
                   {item.icon} {item.label}
                 </option>
               ))}
             </select>
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-dubai-black text-xs">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gold text-xs">
               ▼
             </div>
           </div>
         </header>
 
         {/* Content Area */}
-        <div className="p-4 lg:p-10 max-w-[1600px] mx-auto animate-in fade-in duration-500">
-          <div className="mb-8 flex justify-between items-end">
+        <div className="p-4 lg:p-10 max-w-[1600px] mx-auto relative z-10">
+          <div className="mb-8 flex justify-between items-end animate-fade-in">
             <div>
-              <h2 className="text-4xl font-serif font-bold text-dubai-black mb-2 tracking-tight">
-                <span className="text-dubai-gold mr-2">{menuItems.find(i => i.id === activeTab)?.icon}</span>
-                {activeTab}
+              <h2 className="text-4xl font-serif font-bold text-white mb-2 tracking-tight flex items-center gap-3">
+                <span className="text-gold animate-pulse-glow p-2 rounded-full bg-white/5">{menuItems.find(i => i.id === activeTab)?.icon}</span>
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60">{activeTab}</span>
               </h2>
-              <p className="text-gray-500">
+              <p className="text-subtle-text font-light tracking-wide">
                 {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
               </p>
             </div>
             <div className="hidden md:flex gap-4">
-              <div className="bg-white px-6 py-3 rounded-2xl shadow-sm border border-gray-200 flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-sm font-bold text-gray-600">System Operational</span>
+              <div className="bg-glass px-6 py-3 rounded-2xl border border-white/10 flex items-center gap-3 shadow-glass">
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
+                <span className="text-sm font-bold text-white/80 tracking-wider uppercase text-xs">System Operational</span>
               </div>
             </div>
           </div>
 
-          {activeTab === 'Overview' && (
-            <AdminOverview
-              stats={stats}
-              bookings={bookings}
-              services={services}
-              users={users}
-              productSales={productSales}
-              productSalesDays={productSalesDays}
-              setProductSalesDays={setProductSalesDays}
-            />
-          )}
+          <div className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
+            {activeTab === 'Overview' && (
+              <AdminOverview
+                stats={stats}
+                bookings={bookings}
+                services={services}
+                users={users}
+                productSales={productSales}
+                productSalesDays={productSalesDays}
+                setProductSalesDays={setProductSalesDays}
+              />
+            )}
 
-          {activeTab === 'Services' && (
-            <AdminServicesManager
-              services={services}
-              setServices={setServices}
-            />
-          )}
+            {activeTab === 'Services' && (
+              <AdminServicesManager
+                services={services}
+                setServices={setServices}
+              />
+            )}
 
-          {activeTab === 'Products' && (
-            <AdminProductsManager
-              products={products}
-              setProducts={setProducts}
-            />
-          )}
+            {activeTab === 'Products' && (
+              <AdminProductsManager
+                products={products}
+                setProducts={setProducts}
+              />
+            )}
 
-          {activeTab === 'Barbers' && (
-            <AdminBarbersManager
-              barbers={barbers}
-              setBarbers={setBarbers}
-            />
-          )}
+            {activeTab === 'Barbers' && (
+              <AdminBarbersManager
+                barbers={barbers}
+                setBarbers={setBarbers}
+              />
+            )}
 
-          {activeTab === 'Users' && (
-            <AdminUsersManager
-              users={users}
-              setUsers={setUsers}
-            />
-          )}
+            {activeTab === 'Users' && (
+              <AdminUsersManager
+                users={users}
+                setUsers={setUsers}
+              />
+            )}
 
-          {activeTab === 'Bookings' && (
-            <AdminBookingsManager
-              bookings={bookings}
-              setBookings={setBookings}
-              services={services}
-              barbers={barbers}
-            />
-          )}
+            {activeTab === 'Bookings' && (
+              <AdminBookingsManager
+                bookings={bookings}
+                setBookings={setBookings}
+                services={services}
+                barbers={barbers}
+              />
+            )}
 
-          {activeTab === 'Orders' && (
-            <AdminOrdersManager
-              orders={orders}
-              setOrders={setOrders}
-            />
-          )}
+            {activeTab === 'Orders' && (
+              <AdminOrdersManager
+                orders={orders}
+                setOrders={setOrders}
+              />
+            )}
 
-          {activeTab === 'Rosters' && (
-            <AdminRosterManager
-              rosters={rosters}
-              setRosters={setRosters}
-              barbers={barbers}
-            />
-          )}
+            {activeTab === 'Rosters' && (
+              <AdminRosterManager
+                rosters={rosters}
+                setRosters={setRosters}
+                barbers={barbers}
+              />
+            )}
 
-          {activeTab === 'Attendance' && (
-            <AdminAttendanceManager
-              attendanceRecords={attendanceRecords}
-              setAttendanceRecords={setAttendanceRecords}
-              barbers={barbers}
-            />
-          )}
+            {activeTab === 'Attendance' && (
+              <AdminAttendanceManager
+                attendanceRecords={attendanceRecords}
+                setAttendanceRecords={setAttendanceRecords}
+                barbers={barbers}
+              />
+            )}
 
-          {activeTab === 'Settings' && (
-            <AdminSettings
-              siteSettings={siteSettings}
-              setSiteSettings={setSiteSettings}
-            />
-          )}
+            {activeTab === 'Settings' && (
+              <AdminSettings
+                siteSettings={siteSettings}
+                setSiteSettings={setSiteSettings}
+              />
+            )}
 
-          {activeTab === 'Analytics' && (
-            <AdminAnalytics
-              services={services}
-              products={products}
-              barbers={barbers}
-              users={users}
-              bookings={bookings}
-              rosters={rosters}
-              orders={orders}
-              attendanceRecords={attendanceRecords}
-              stats={stats}
-            />
-          )}
+            {activeTab === 'Analytics' && (
+              <AdminAnalytics
+                services={services}
+                products={products}
+                barbers={barbers}
+                users={users}
+                bookings={bookings}
+                rosters={rosters}
+                orders={orders}
+                attendanceRecords={attendanceRecords}
+                stats={stats}
+              />
+            )}
+            
+            {activeTab === 'Loyalty' && (
+              <AdminLoyaltyDashboard />
+            )}
+          </div>
         </div>
       </main>
     </div>

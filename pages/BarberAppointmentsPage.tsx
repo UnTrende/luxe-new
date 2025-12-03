@@ -57,7 +57,7 @@ const BarberAppointmentsPage: React.FC = () => {
         // Search filter
         if (searchQuery) {
             filtered = filtered.filter(b =>
-                b.userName.toLowerCase().includes(searchQuery.toLowerCase())
+                (b.userName || '').toLowerCase().includes(searchQuery.toLowerCase())
             );
         }
 
@@ -208,11 +208,11 @@ const BarberAppointmentsPage: React.FC = () => {
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="w-10 h-10 rounded-full bg-gold-gradient p-[1px]">
                                     <div className="w-full h-full rounded-full bg-midnight flex items-center justify-center">
-                                        <span className="text-gold font-bold">{booking.userName.charAt(0)}</span>
+                                        <span className="text-gold font-bold">{(booking.userName || 'Guest').charAt(0).toUpperCase()}</span>
                                     </div>
                                 </div>
                                 <div className="flex-1">
-                                    <h3 className="text-white font-serif font-bold">{booking.userName}</h3>
+                                    <h3 className="text-white font-serif font-bold">{booking.userName || 'Guest User'}</h3>
                                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${booking.status === 'confirmed' ? 'border-green-500/30 text-green-400 bg-green-500/5' :
                                         booking.status === 'completed' ? 'border-blue-500/30 text-blue-400 bg-blue-500/5' :
                                             'border-red-500/30 text-red-400 bg-red-500/5'
@@ -267,11 +267,11 @@ const BarberAppointmentsPage: React.FC = () => {
                             <div className="flex items-center gap-3 mb-2">
                                 <div className="w-12 h-12 rounded-full bg-gold-gradient p-[1px]">
                                     <div className="w-full h-full rounded-full bg-midnight flex items-center justify-center">
-                                        <span className="text-gold font-bold text-xl">{selectedBooking.userName.charAt(0)}</span>
+                                        <span className="text-gold font-bold text-xl">{(selectedBooking.userName || 'Guest').charAt(0).toUpperCase()}</span>
                                     </div>
                                 </div>
                                 <div>
-                                    <h2 className="text-3xl font-serif font-bold text-white">{selectedBooking.userName}</h2>
+                                    <h2 className="text-3xl font-serif font-bold text-white">{selectedBooking.userName || 'Guest User'}</h2>
                                     <p className="text-subtle-text text-sm">Booking Details</p>
                                 </div>
                             </div>
@@ -348,7 +348,7 @@ const BarberAppointmentsPage: React.FC = () => {
 
                         <h2 className="text-2xl font-serif font-bold mb-2 text-white">Cancel Appointment</h2>
                         <p className="text-subtle-text mb-6 text-sm">
-                            Are you sure you want to cancel <span className="text-white font-bold">{selectedBooking?.userName}</span>? This action cannot be undone.
+                            Are you sure you want to cancel <span className="text-white font-bold">{selectedBooking?.userName || 'this appointment'}</span>? This action cannot be undone.
                         </p>
 
                         <textarea

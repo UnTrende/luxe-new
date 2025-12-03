@@ -1,5 +1,5 @@
 import { isSupabaseConfigured, supabase } from './supabaseClient';
-import { Api, UserProfile, Review, BookingWithDetails, OrderWithDetails, BarberService, Booking, AppNotification, Product, Barber, Service, ProductOrder, Attendance } from '../types';
+import { Api, UserProfile, Review, BookingWithDetails, OrderWithDetails, BarberService, Booking, AppNotification, Product, Barber, Service, ProductOrder, Attendance, LoyaltyStats, LoyaltyHistoryEntry, LoyaltySettings } from '../types';
 import { AuthError, Session, SignInWithPasswordCredentials, RealtimeChannel } from '@supabase/supabase-js';
 
 // Helper function to normalize product data and ensure type consistency
@@ -334,7 +334,7 @@ const realApi = {
 
   // Admin Service Management
   addService: (serviceData: Omit<Service, 'id'>): Promise<Service> => invoke('add-service', serviceData),
-  updateService: (serviceId: string, serviceData: Partial<Omit<Service, 'id'>>): Promise<Service> => invoke('update-service', { serviceId, ...serviceData }),
+  updateService: (serviceId: string, serviceData: Partial<Omit<Service, 'id'>>): Promise<Service> => invoke('update-service', { serviceId, serviceData }),
   deleteService: (serviceId: string): Promise<{ success: boolean }> => invoke('delete-service', { serviceId }),
 
   // Site Settings Management
@@ -717,6 +717,42 @@ const realApi = {
       throw new Error(`Function get-product-sales failed: ${errorText}`);
     }
     return response.json();
+  },
+
+  // Loyalty System (Spending-based)
+  getLoyaltyStats: async (): Promise<LoyaltyStats> => {
+    const result = await invoke<{ success: boolean; stats: LoyaltyStats }>('get-loyalty-stats');
+    return result.stats;
+  },
+
+  getLoyaltyHistory: async (limit: number = 50, offset: number = 0): Promise<LoyaltyHistoryEntry[]> => {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const { data: { session } } = await supabase!.auth.getSession();
+    const userToken = session?.access_token;
+
+    const response = await fetch(`${supabaseUrl}/functions/v1/get-loyalty-history?limit=${limit}&offset=${offset}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${userToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Function get-loyalty-history failed: ${errorText}`);
+    }
+
+    const result = await response.json();
+    return result.history || [];
+  },
+  
+  updateLoyaltySettings: async (tierName: 'Silver' | 'Gold' | 'Platinum', settings: Partial<LoyaltySettings>): Promise<LoyaltySettings> => {
+    const result = await invoke<{ success: boolean; settings: LoyaltySettings }>('update-loyalty-settings', {
+      tier_name: tierName,
+      ...settings
+    });
+    return result.settings;
   }
 };
 

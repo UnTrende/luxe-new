@@ -4,6 +4,7 @@ import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { supabaseAdmin } from '../_shared/supabaseClient.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { authenticateUser } from '../_shared/auth.ts';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -12,16 +13,7 @@ serve(async (req) => {
 
   try {
     // 1. Authenticate user
-    const client = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
-    );
-    const { data: { user }, error: userError } = await client.auth.getUser();
-    if (userError) throw userError;
-    if (!user) {
-      throw new Error("Unauthorized: User not authenticated.");
-    }
+    const user = await authenticateUser(req);
 
     // 2. Get the barber ID from the barbers table using the user ID
     const { data: barber, error: barberError } = await supabaseAdmin

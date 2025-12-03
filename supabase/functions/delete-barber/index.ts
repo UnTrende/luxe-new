@@ -4,6 +4,7 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { supabaseAdmin } from '../_shared/supabaseClient.ts';
+import { authenticateAdmin } from '../_shared/auth.ts';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -11,9 +12,10 @@ serve(async (req) => {
   }
 
   try {
-    const { barberId, userId } = await req.json();
+    // Authenticate admin user
+    const admin = await authenticateAdmin(req);
     
-    // Note: A real app should verify admin privileges here.
+    const { barberId, userId } = await req.json();
     
     // 1. Delete the barber profile
     const { error: profileError } = await supabaseAdmin

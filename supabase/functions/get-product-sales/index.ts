@@ -2,6 +2,7 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { supabaseAdmin } from '../_shared/supabaseClient.ts';
+import { authenticateAdmin } from '../_shared/auth.ts';
 
 // Returns simple product sales analytics for the last 30 days
 // - dailyRevenue: [{ date, revenue }]
@@ -10,6 +11,9 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
+    // Authenticate admin user
+    const admin = await authenticateAdmin(req);
+    
     const url = new URL(req.url);
     const daysParam = url.searchParams.get('days');
     const days = Math.max(1, Math.min(90, Number(daysParam) || 30));

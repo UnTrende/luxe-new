@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { Product } from '../../types';
 import { api } from '../../services/api';
 import { ImageUpload } from '../../components/ImageUpload';
+import { Edit2, Trash2, Plus, Search, Package, AlertTriangle } from 'lucide-react';
 
 interface AdminProductsManagerProps {
     products: Product[];
@@ -20,6 +22,7 @@ export const AdminProductsManager: React.FC<AdminProductsManagerProps> = ({ prod
     const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
     const [productImageUrl, setProductImageUrl] = useState('');
     const [productImagePath, setProductImagePath] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
 
     const productForm = useForm<ProductFormData>();
 
@@ -107,73 +110,100 @@ export const AdminProductsManager: React.FC<AdminProductsManagerProps> = ({ prod
         setIsProductModalOpen(true);
     };
 
+    const filteredProducts = products.filter(p =>
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (p.categories?.[0] || '').toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     return (
-        <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-xl shadow-gray-200/50">
-            <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+        <div className="bg-glass-card rounded-[2rem] border border-white/10 overflow-hidden relative">
+            {/* Header */}
+            <div className="p-8 border-b border-white/10 flex flex-col md:flex-row justify-between items-center gap-6">
                 <div>
-                    <h2 className="text-2xl font-serif font-bold text-dubai-black">Product Inventory</h2>
-                    <p className="text-gray-500 text-sm mt-1">Track stock levels and manage product catalog</p>
+                    <h2 className="text-3xl font-serif font-bold text-white mb-2">Inventory</h2>
+                    <p className="text-subtle-text text-sm">Track stock levels and manage product catalog</p>
                 </div>
-                <button
-                    onClick={() => openModal()}
-                    className="bg-dubai-gold text-dubai-black px-6 py-3 rounded-xl font-bold text-sm hover:bg-white transition-all shadow-md hover:shadow-lg"
-                >
-                    + Add Product
-                </button>
+
+                <div className="flex items-center gap-4 w-full md:w-auto">
+                    <div className="relative flex-1 md:w-64">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
+                        <input
+                            type="text"
+                            placeholder="Search products..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full bg-black/30 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white placeholder:text-white/30 focus:border-gold/50 focus:outline-none transition-all"
+                        />
+                    </div>
+                    <button
+                        onClick={() => openModal()}
+                        className="bg-gold text-black px-6 py-3 rounded-xl font-bold text-sm hover:bg-white transition-all shadow-glow flex items-center gap-2"
+                    >
+                        <Plus size={18} />
+                        <span>Add Product</span>
+                    </button>
+                </div>
             </div>
 
+            {/* Table */}
             <div className="overflow-x-auto">
-
                 <table className="w-full">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            <th className="text-left py-5 px-8 text-xs font-bold text-dubai-gold uppercase tracking-[0.15em]">Product</th>
-                            <th className="text-left py-5 px-8 text-xs font-bold text-dubai-gold uppercase tracking-[0.15em]">Category</th>
-                            <th className="text-left py-5 px-8 text-xs font-bold text-dubai-gold uppercase tracking-[0.15em]">Price</th>
-                            <th className="text-left py-5 px-8 text-xs font-bold text-dubai-gold uppercase tracking-[0.15em]">Stock</th>
-                            <th className="text-right py-5 px-8 text-xs font-bold text-dubai-gold uppercase tracking-[0.15em]">Actions</th>
+                    <thead>
+                        <tr className="border-b border-white/5">
+                            <th className="text-left py-6 px-8 text-xs font-bold text-gold uppercase tracking-[0.2em]">Product</th>
+                            <th className="text-left py-6 px-8 text-xs font-bold text-gold uppercase tracking-[0.2em]">Category</th>
+                            <th className="text-left py-6 px-8 text-xs font-bold text-gold uppercase tracking-[0.2em]">Price</th>
+                            <th className="text-left py-6 px-8 text-xs font-bold text-gold uppercase tracking-[0.2em]">Stock</th>
+                            <th className="text-right py-6 px-8 text-xs font-bold text-gold uppercase tracking-[0.2em]">Actions</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
-                        {products.map((product) => (
-                            <tr key={product.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors group">
-                                <td className="py-5 px-8 font-medium text-dubai-black">
-                                    <div className="flex items-center gap-3">
-                                        {(product.imageUrl || product.image_url) && (
+                    <tbody className="divide-y divide-white/5">
+                        {filteredProducts.map((product) => (
+                            <tr key={product.id} className="group hover:bg-white/5 transition-colors">
+                                <td className="py-5 px-8 font-medium text-white">
+                                    <div className="flex items-center gap-4">
+                                        {(product.imageUrl || product.image_url) ? (
                                             <img
                                                 src={product.imageUrl || product.image_url}
                                                 alt={product.name}
-                                                className="w-10 h-10 rounded-lg object-cover border border-gray-200 group-hover:border-dubai-gold/50 transition-colors"
+                                                className="w-12 h-12 rounded-xl object-cover border border-white/10 group-hover:border-gold/50 transition-colors"
                                             />
+                                        ) : (
+                                            <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/20">
+                                                <Package size={20} />
+                                            </div>
                                         )}
-                                        {product.name}
+                                        <span className="text-lg">{product.name}</span>
                                     </div>
                                 </td>
                                 <td className="py-5 px-8">
-                                    <span className="px-3 py-1 rounded-full bg-gray-100 border border-gray-200 text-xs font-bold text-gray-600 uppercase tracking-wide group-hover:border-dubai-gold/30 transition-colors">
+                                    <span className="px-3 py-1 rounded-lg bg-white/5 border border-white/10 text-xs font-bold text-subtle-text uppercase tracking-wide group-hover:border-gold/30 group-hover:text-white transition-colors">
                                         {product.categories?.[0] || product.category || 'General'}
                                     </span>
                                 </td>
-                                <td className="py-5 px-8 font-bold text-dubai-gold">${product.price}</td>
+                                <td className="py-5 px-8 font-bold text-gold text-lg">${product.price}</td>
                                 <td className="py-5 px-8">
-                                    <div className={`flex items-center gap-2 ${product.stock < 10 ? 'text-red-500' : 'text-green-600'}`}>
-                                        <div className={`w-2 h-2 rounded-full ${product.stock < 10 ? 'bg-red-500' : 'bg-green-500'}`} />
+                                    <div className={`flex items-center gap-2 ${product.stock < 10 ? 'text-red-400' : 'text-green-400'}`}>
+                                        <div className={`w-2 h-2 rounded-full ${product.stock < 10 ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`} />
                                         <span className="font-bold">{product.stock} units</span>
+                                        {product.stock < 5 && <AlertTriangle size={14} className="text-red-400" />}
                                     </div>
                                 </td>
                                 <td className="py-5 px-8 text-right">
-                                    <div className="flex justify-end gap-3">
+                                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <button
                                             onClick={() => openModal(product)}
-                                            className="text-gray-400 hover:text-dubai-gold font-bold text-sm transition-colors"
+                                            className="p-2 rounded-lg hover:bg-white/10 text-subtle-text hover:text-white transition-colors"
+                                            title="Edit"
                                         >
-                                            Edit
+                                            <Edit2 size={18} />
                                         </button>
                                         <button
                                             onClick={() => handleProductDelete(product.id)}
-                                            className="text-gray-400 hover:text-red-500 font-bold text-sm transition-colors"
+                                            className="p-2 rounded-lg hover:bg-red-500/10 text-subtle-text hover:text-red-400 transition-colors"
+                                            title="Delete"
                                         >
-                                            Delete
+                                            <Trash2 size={18} />
                                         </button>
                                     </div>
                                 </td>
@@ -182,133 +212,138 @@ export const AdminProductsManager: React.FC<AdminProductsManagerProps> = ({ prod
                     </tbody>
                 </table>
 
-                {products.length === 0 && (
-                    <div className="text-center py-16">
-                        <p className="text-gray-500 text-lg">No products found.</p>
+                {filteredProducts.length === 0 && (
+                    <div className="text-center py-24">
+                        <p className="text-subtle-text text-lg">No products found.</p>
                     </div>
                 )}
             </div>
 
             {/* Product Modal */}
-            {isProductModalOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-                    <div className="bg-white rounded-3xl p-8 max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-100 animate-in zoom-in-95 duration-200">
-                        <h3 className="text-2xl font-serif font-bold text-dubai-black mb-6">
-                            {currentProduct ? 'Edit Product' : 'Add New Product'}
-                        </h3>
+            {isProductModalOpen && createPortal(
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] animate-fade-in">
+                    <div className="bg-glass-card w-screen h-screen p-10 overflow-y-auto border-none shadow-none animate-scale-in relative rounded-none flex flex-col">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold to-transparent opacity-50" />
 
-                        <form onSubmit={productForm.handleSubmit(handleProductSubmit)} className="space-y-5">
-                            {/* Product Image Upload */}
-                            <div>
-                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
-                                    Product Image
-                                </label>
-                                <ImageUpload
-                                    onImageUploaded={(publicUrl: string, imagePath: string) => {
-                                        setProductImagePath(imagePath);
-                                        setProductImageUrl(publicUrl);
-                                    }}
-                                    currentImageUrl={productImageUrl || currentProduct?.imageUrl || currentProduct?.image_url}
-                                    bucket="luxecut-public"
-                                    folder="products"
-                                    entityType="product"
-                                    entityId={currentProduct?.id}
-                                />
-                            </div>
+                        <div className="max-w-4xl mx-auto w-full">
+                            <h3 className="text-3xl font-serif font-bold text-white mb-8 text-center pt-10">
+                                {currentProduct ? 'Edit Product' : 'New Product'}
+                            </h3>
 
-                            {/* Product Name */}
-                            <div>
-                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Name *</label>
-                                <input
-                                    {...productForm.register('name', { required: 'Name is required' })}
-                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-dubai-black focus:border-dubai-gold focus:ring-1 focus:ring-dubai-gold/20 focus:outline-none transition-all placeholder:text-gray-400"
-                                    placeholder="e.g., Luxe Pomade"
-                                />
-                            </div>
+                            <form onSubmit={productForm.handleSubmit(handleProductSubmit)} className="space-y-6 pb-20">
+                                {/* Product Image Upload */}
+                                <div>
+                                    <label className="block text-xs font-bold uppercase tracking-widest text-subtle-text mb-2">
+                                        Product Image
+                                    </label>
+                                    <div className="bg-black/20 rounded-xl p-2 border border-white/5">
+                                        <ImageUpload
+                                            onImageUploaded={(publicUrl: string, imagePath: string) => {
+                                                setProductImagePath(imagePath);
+                                                setProductImageUrl(publicUrl);
+                                            }}
+                                            currentImageUrl={productImageUrl || currentProduct?.imageUrl || currentProduct?.image_url}
+                                            bucket="luxecut-public"
+                                            folder="products"
+                                            entityType="product"
+                                            entityId={currentProduct?.id}
+                                        />
+                                    </div>
+                                </div>
 
-                            {/* Category */}
-                            <div>
-                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Category *</label>
-                                <select
-                                    {...productForm.register('category', { required: 'Category is required' })}
-                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-dubai-black focus:border-dubai-gold focus:ring-1 focus:ring-dubai-gold/20 focus:outline-none transition-all placeholder:text-gray-400"
-                                >
-                                    <option value="">Select category</option>
-                                    <option value="Hair Care">Hair Care</option>
-                                    <option value="Beard Care">Beard Care</option>
-                                    <option value="Styling">Styling</option>
-                                    <option value="Shaving">Shaving</option>
-                                    <option value="Tools">Tools</option>
-                                    <option value="Branded Merch">Branded Merch</option>
-                                </select>
-                            </div>
+                                {/* Product Name */}
+                                <div className="group">
+                                    <label className="block text-xs font-bold uppercase tracking-widest text-subtle-text mb-2 group-focus-within:text-gold transition-colors">Name</label>
+                                    <input
+                                        {...productForm.register('name', { required: 'Name is required' })}
+                                        className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-4 text-white focus:border-gold focus:ring-1 focus:ring-gold/20 focus:outline-none transition-all placeholder:text-white/20"
+                                        placeholder="e.g., Luxe Pomade"
+                                    />
+                                </div>
 
-                            {/* Description */}
-                            <div>
-                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Description</label>
-                                <textarea
-                                    {...productForm.register('description')}
-                                    rows={3}
-                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-dubai-black focus:border-dubai-gold focus:ring-1 focus:ring-dubai-gold/20 focus:outline-none transition-all placeholder:text-gray-400"
-                                    placeholder="Product description..."
-                                />
-                            </div>
+                                {/* Category */}
+                                <div className="group">
+                                    <label className="block text-xs font-bold uppercase tracking-widest text-subtle-text mb-2 group-focus-within:text-gold transition-colors">Category</label>
+                                    <select
+                                        {...productForm.register('category', { required: 'Category is required' })}
+                                        className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-4 text-white focus:border-gold focus:ring-1 focus:ring-gold/20 focus:outline-none transition-all appearance-none"
+                                    >
+                                        <option value="" className="bg-card-bg">Select category</option>
+                                        <option value="Hair Care" className="bg-card-bg">Hair Care</option>
+                                        <option value="Beard Care" className="bg-card-bg">Beard Care</option>
+                                        <option value="Styling" className="bg-card-bg">Styling</option>
+                                        <option value="Shaving" className="bg-card-bg">Shaving</option>
+                                        <option value="Tools" className="bg-card-bg">Tools</option>
+                                        <option value="Branded Merch" className="bg-card-bg">Branded Merch</option>
+                                    </select>
+                                </div>
 
-                            {/* Price */}
-                            <div>
-                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Price ($) *</label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    {...productForm.register('price', { required: 'Price is required', min: 0 })}
-                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-dubai-black focus:border-dubai-gold focus:ring-1 focus:ring-dubai-gold/20 focus:outline-none transition-all placeholder:text-gray-400"
-                                    placeholder="25.00"
-                                />
-                            </div>
+                                {/* Description */}
+                                <div className="group">
+                                    <label className="block text-xs font-bold uppercase tracking-widest text-subtle-text mb-2 group-focus-within:text-gold transition-colors">Description</label>
+                                    <textarea
+                                        {...productForm.register('description')}
+                                        rows={3}
+                                        className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-4 text-white focus:border-gold focus:ring-1 focus:ring-gold/20 focus:outline-none transition-all placeholder:text-white/20"
+                                        placeholder="Product description..."
+                                    />
+                                </div>
 
-                            {/* Stock Quantity */}
-                            <div>
-                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Stock Quantity *</label>
-                                <input
-                                    type="number"
-                                    {...productForm.register('stock', {
-                                        required: 'Stock quantity is required',
-                                        min: { value: 0, message: 'Stock cannot be negative' }
-                                    })}
-                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-dubai-black focus:border-dubai-gold focus:ring-1 focus:ring-dubai-gold/20 focus:outline-none transition-all placeholder:text-gray-400"
-                                />
-                                {productForm.formState.errors.stock && (
-                                    <p className="text-red-400 text-sm mt-1">{productForm.formState.errors.stock.message}</p>
-                                )}
-                            </div>
+                                <div className="grid grid-cols-2 gap-6">
+                                    {/* Price */}
+                                    <div className="group">
+                                        <label className="block text-xs font-bold uppercase tracking-widest text-subtle-text mb-2 group-focus-within:text-gold transition-colors">Price ($)</label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            {...productForm.register('price', { required: 'Price is required', min: 0 })}
+                                            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-4 text-white focus:border-gold focus:ring-1 focus:ring-gold/20 focus:outline-none transition-all placeholder:text-white/20"
+                                            placeholder="25.00"
+                                        />
+                                    </div>
 
-                            {/* Actions */}
-                            <div className="flex gap-3 pt-4">
-                                <button
-                                    type="submit"
-                                    className="flex-1 bg-dubai-gold text-dubai-black py-3 px-4 rounded-xl font-bold uppercase tracking-widest text-sm hover:bg-white transition-all shadow-lg"
-                                >
-                                    {currentProduct ? 'Update Product' : 'Create Product'}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setIsProductModalOpen(false);
-                                        setCurrentProduct(null);
-                                        productForm.reset();
-                                        setProductImagePath('');
-                                        setProductImageUrl('');
-                                    }}
-                                    className="flex-1 bg-transparent text-gray-500 border border-gray-200 py-3 px-4 rounded-xl font-bold uppercase tracking-widest text-sm hover:bg-gray-50 hover:text-dubai-black transition-all"
-                                >
-                                    Cancel
-                                </button>
-                            </div>
-                        </form>
+                                    {/* Stock Quantity */}
+                                    <div className="group">
+                                        <label className="block text-xs font-bold uppercase tracking-widest text-subtle-text mb-2 group-focus-within:text-gold transition-colors">Stock</label>
+                                        <input
+                                            type="number"
+                                            {...productForm.register('stock', {
+                                                required: 'Stock quantity is required',
+                                                min: { value: 0, message: 'Stock cannot be negative' }
+                                            })}
+                                            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-4 text-white focus:border-gold focus:ring-1 focus:ring-gold/20 focus:outline-none transition-all placeholder:text-white/20"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Actions */}
+                                <div className="flex gap-4 pt-6">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setIsProductModalOpen(false);
+                                            setCurrentProduct(null);
+                                            productForm.reset();
+                                            setProductImagePath('');
+                                            setProductImageUrl('');
+                                        }}
+                                        className="flex-1 bg-transparent text-subtle-text border border-white/10 py-4 px-6 rounded-xl font-bold uppercase tracking-widest text-sm hover:bg-white/5 hover:text-white transition-all"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="flex-1 bg-gold text-black py-4 px-6 rounded-xl font-bold uppercase tracking-widest text-sm hover:bg-white transition-all shadow-glow"
+                                    >
+                                        {currentProduct ? 'Save Changes' : 'Create Product'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
-
     );
 };

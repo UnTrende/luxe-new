@@ -4,13 +4,17 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { supabaseAdmin } from '../_shared/supabaseClient.ts';
+import { authenticateUser } from '../_shared/auth.ts';
 
-serve(async (_req) => {
-  if (_req.method === 'OPTIONS') {
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
+    // Authenticate user
+    const user = await authenticateUser(req);
+    
     const { data: services, error } = await supabaseAdmin
       .from('services')
       .select('*')

@@ -73,7 +73,8 @@ serve(async (req) => {
         duration: serviceData.duration,
         category: serviceData.category,
         image_url: serviceData.image_url || null,
-        image_path: serviceData.image_path || null
+        image_path: serviceData.image_path || null,
+        loyalty_points: serviceData.loyalty_points || 0
       })
       .select()
       .single();

@@ -146,18 +146,39 @@ serve(async (req) => {
     console.log('get-barber-schedule: Found', schedule.length, 'bookings for today');
     
     // Map database column names to JavaScript property names
-    const mappedBookings = schedule.map(booking => ({
-      id: booking.id,
-      userId: booking.user_id,
-      userName: booking.userName,
-      barberId: booking.barber_id,
-      serviceIds: booking.service_ids,
-      date: booking.date,
-      timeSlot: booking.timeSlot,
-      totalPrice: booking.totalPrice,
-      status: booking.status,
-      reviewLeft: booking.reviewLeft,
-      cancelMessage: booking.cancelMessage
+    // Also fetch user name from app_users table if userName is missing
+    const mappedBookings = await Promise.all(schedule.map(async (booking) => {
+      let userName = booking.userName || booking.username; // Try both column names
+      
+      // If userName is still missing, fetch from app_users table
+      if (!userName && booking.user_id) {
+        const { data: userData } = await supabaseAdmin
+          .from('app_users')
+          .select('name')
+          .eq('id', booking.user_id)
+          .single();
+        
+        userName = userData?.name || 'Guest User';
+      }
+      
+      // Final fallback
+      if (!userName) {
+        userName = 'Guest User';
+      }
+      
+      return {
+        id: booking.id,
+        userId: booking.user_id,
+        userName: userName,
+        barberId: booking.barber_id,
+        serviceIds: booking.service_ids,
+        date: booking.date,
+        timeSlot: booking.timeSlot || booking.timeslot, // Try both
+        totalPrice: booking.totalPrice || booking.totalprice, // Try both
+        status: booking.status,
+        reviewLeft: booking.reviewLeft || booking.reviewleft, // Try both
+        cancelMessage: booking.cancelMessage || booking.cancelmessage // Try both
+      };
     }));
     
     return new Response(JSON.stringify(mappedBookings), {

@@ -5,6 +5,7 @@ import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { supabaseAdmin } from '../_shared/supabaseClient.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { authenticateUser } from '../_shared/auth.ts';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -14,19 +15,14 @@ serve(async (req) => {
   try {
     const { bookingDetails } = await req.json();
 
-    // If user is authenticated, get their ID
-    const authHeader = req.headers.get('Authorization');
+    // Authenticate user if possible
     let userId = null;
-    if (authHeader) {
-      const client = createClient(
-        Deno.env.get('SUPABASE_URL') ?? '',
-        Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-        { global: { headers: { Authorization: authHeader } } }
-      );
-      const { data: { user } } = await client.auth.getUser();
-      if (user) {
-        userId = user.id;
-      }
+    try {
+      const user = await authenticateUser(req);
+      userId = user.id;
+    } catch (authError) {
+      // User is not authenticated, which is allowed for guest bookings
+      console.log('User not authenticated, allowing guest booking');
     }
 
     // Map JavaScript property names to database column names (all lowercase)
@@ -50,6 +46,35 @@ serve(async (req) => {
       .single();
 
     if (bookingError) throw bookingError;
+
+    // Process loyalty transaction for each service
+    if (userId && bookingDetails.serviceIds && bookingDetails.serviceIds.length > 0) {
+      try {
+        // Process loyalty for the first service (assuming single service bookings for simplicity)
+        // In a real implementation, you might want to process loyalty for all services
+        const serviceId = bookingDetails.serviceIds[0];
+        
+        // Call the process-loyalty-transaction function
+        const { data: loyaltyResult, error: loyaltyError } = await supabaseAdmin.functions.invoke(
+          'process-loyalty-transaction',
+          {
+            body: {
+              bookingId: newBooking.id,
+              amountPaid: bookingDetails.totalPrice,
+              serviceId: serviceId
+            }
+          }
+        );
+
+        if (loyaltyError) {
+          console.error('Loyalty transaction failed:', loyaltyError.message);
+        } else {
+          console.log('Loyalty transaction successful:', loyaltyResult);
+        }
+      } catch (loyaltyProcessingError) {
+        console.error('Error processing loyalty transaction:', loyaltyProcessingError);
+      }
+    }
 
     // Create notification for barber
     // Fetch Barber Name and User ID for the notification message

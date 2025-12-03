@@ -4,6 +4,7 @@ import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { supabaseAdmin } from '../_shared/supabaseClient.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { authenticateUser } from '../_shared/auth.ts';
 
 serve(async (req) => {
   console.log('[Edge Function] update-attendance called');
@@ -34,36 +35,7 @@ serve(async (req) => {
     // action: 'clock-in' | 'clock-out' | 'start-break' | 'end-break' | 'mark-present' | 'mark-absent'
 
     // 1. Authenticate user
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      console.error('[Edge Function] Missing Authorization header');
-      throw new Error("Missing Authorization header");
-    }
-    
-    console.log('[Edge Function] Auth header present');
-    
-    const client = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: authHeader } } }
-    );
-    
-    console.log('[Edge Function] Created Supabase client');
-    
-    const { data: { user }, error: userError } = await client.auth.getUser();
-    console.log('[Edge Function] User data:', user);
-    console.log('[Edge Function] User error:', userError);
-    
-    if (userError) {
-      console.error('[Edge Function] User authentication error:', userError);
-      throw userError;
-    }
-    
-    if (!user) {
-      console.error('[Edge Function] User not authenticated');
-      throw new Error("Unauthorized: User not authenticated.");
-    }
-    
+    const user = await authenticateUser(req);
     console.log('[Edge Function] User authenticated successfully');
 
     // 2. Get the barber ID from the barbers table using the user ID

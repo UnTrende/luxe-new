@@ -5,6 +5,7 @@ import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { supabaseAdmin } from '../_shared/supabaseClient.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { authenticateUser } from '../_shared/auth.ts';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -14,14 +15,8 @@ serve(async (req) => {
   try {
     const { bookingId } = await req.json();
     
-    const client = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
-    );
-    const { data: { user }, error: userError } = await client.auth.getUser();
-    if (userError) throw userError;
-    if (!user) throw new Error("User not found.");
+    // Authenticate user
+    const user = await authenticateUser(req);
 
     // Update the booking status if it belongs to the user
     const { data: updatedBooking, error: updateError } = await supabaseAdmin

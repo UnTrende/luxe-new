@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { Booking, Service, Barber } from '../../types';
 import { api } from '../../services/api';
+import { Search, Filter, Calendar, Clock, User, Scissors, X } from 'lucide-react';
 
 interface AdminBookingsManagerProps {
     bookings: Booking[];
@@ -40,120 +41,145 @@ export const AdminBookingsManager: React.FC<AdminBookingsManagerProps> = ({ book
     });
 
     return (
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 hover:border-dubai-gold/30 transition-all overflow-hidden">
-            <div className="p-8 border-b border-gray-100">
-                <div className="flex justify-between items-center mb-6">
-                    <div>
-                        <h2 className="text-2xl font-serif font-bold text-dubai-black">Reservations</h2>
-                        <p className="text-subtle-text text-sm mt-1">Manage appointments and schedules</p>
-                    </div>
+        <div className="space-y-6">
+            {/* Header & Controls */}
+            <div className="flex flex-col md:flex-row justify-between items-end gap-4 bg-glass-card p-6 rounded-3xl border border-white/10 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-gold/5 blur-[80px] rounded-full pointer-events-none" />
+
+                <div className="relative z-10">
+                    <h2 className="text-3xl font-serif font-bold text-white mb-2 flex items-center gap-3">
+                        <span className="p-2 rounded-xl bg-gold/10 text-gold border border-gold/20">
+                            <Calendar size={24} />
+                        </span>
+                        Reservations
+                    </h2>
+                    <p className="text-subtle-text text-sm">Manage appointments and schedules</p>
                 </div>
 
-                {/* Search and Filter Controls */}
-                <div className="flex flex-wrap gap-4">
-                    <div className="flex-1 min-w-64">
+                <div className="flex flex-wrap gap-3 relative z-10 w-full md:w-auto">
+                    <div className="relative flex-1 md:min-w-[300px]">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-subtle-text" size={18} />
                         <input
                             type="text"
                             placeholder="Search bookings..."
-                            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-dubai-gold/50"
+                            className="w-full bg-black/40 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white placeholder:text-subtle-text focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/50 transition-all"
                             value={bookingSearchTerm}
                             onChange={(e) => setBookingSearchTerm(e.target.value)}
                         />
                     </div>
-                    <div>
+
+                    <div className="relative">
+                        <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-subtle-text" size={18} />
                         <select
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
-                            className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-dubai-dark-grey focus:border-dubai-black focus:outline-none transition-colors cursor-pointer"
+                            className="appearance-none bg-black/40 border border-white/10 rounded-xl pl-12 pr-10 py-3 text-white focus:outline-none focus:border-gold/50 transition-all cursor-pointer hover:bg-white/5"
                         >
-                            <option value="all">All Statuses</option>
-                            <option value="pending">Pending</option>
-                            <option value="confirmed">Confirmed</option>
-                            <option value="completed">Completed</option>
-                            <option value="cancelled">Cancelled</option>
+                            <option value="all" className="bg-gray-900">All Statuses</option>
+                            <option value="pending" className="bg-gray-900">Pending</option>
+                            <option value="confirmed" className="bg-gray-900">Confirmed</option>
+                            <option value="completed" className="bg-gray-900">Completed</option>
+                            <option value="cancelled" className="bg-gray-900">Cancelled</option>
                         </select>
                     </div>
-                    <button
-                        onClick={() => {
-                            setBookingSearchTerm('');
-                            setStatusFilter('all');
-                        }}
-                        className="px-4 py-3 text-subtle-text hover:text-dubai-black font-bold transition-colors"
-                    >
-                        Clear
-                    </button>
                 </div>
             </div>
 
-            <div className="overflow-x-auto">
-                <table className="w-full">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            <th className="text-left py-4 px-8 text-xs font-bold text-subtle-text uppercase tracking-wider">Customer</th>
-                            <th className="text-left py-4 px-8 text-xs font-bold text-subtle-text uppercase tracking-wider">Service</th>
-                            <th className="text-left py-4 px-8 text-xs font-bold text-subtle-text uppercase tracking-wider">Barber</th>
-                            <th className="text-left py-4 px-8 text-xs font-bold text-subtle-text uppercase tracking-wider">Date & Time</th>
-                            <th className="text-left py-4 px-8 text-xs font-bold text-subtle-text uppercase tracking-wider">Status</th>
-                            <th className="text-right py-4 px-8 text-xs font-bold text-subtle-text uppercase tracking-wider">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                        {filteredBookings.map((booking) => {
-                            // Get service names from service_ids
-                            const serviceNames = booking.serviceIds
-                                ? booking.serviceIds
-                                    .map((id: string) => services.find(s => s.id === id)?.name)
-                                    .filter(Boolean)
-                                    .join(', ')
-                                : 'Unknown Service';
+            {/* Bookings Table */}
+            <div className="bg-glass-card rounded-3xl border border-white/10 overflow-hidden shadow-glass">
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead>
+                            <tr className="border-b border-white/5 bg-white/5">
+                                <th className="text-left py-5 px-8 text-xs font-bold text-gold uppercase tracking-[0.2em]">Customer</th>
+                                <th className="text-left py-5 px-8 text-xs font-bold text-gold uppercase tracking-[0.2em]">Service</th>
+                                <th className="text-left py-5 px-8 text-xs font-bold text-gold uppercase tracking-[0.2em]">Barber</th>
+                                <th className="text-left py-5 px-8 text-xs font-bold text-gold uppercase tracking-[0.2em]">Date & Time</th>
+                                <th className="text-left py-5 px-8 text-xs font-bold text-gold uppercase tracking-[0.2em]">Status</th>
+                                <th className="text-right py-5 px-8 text-xs font-bold text-gold uppercase tracking-[0.2em]">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5">
+                            {filteredBookings.map((booking) => {
+                                // Get service names from service_ids
+                                const serviceNames = booking.serviceIds
+                                    ? booking.serviceIds
+                                        .map((id: string) => services.find(s => s.id === id)?.name)
+                                        .filter(Boolean)
+                                        .join(', ')
+                                    : 'Unknown Service';
 
-                            // Get barber name from barber_id
-                            const barberName = booking.barberId
-                                ? barbers.find(b => b.id === booking.barberId)?.name || 'Any Barber'
-                                : 'Any Barber';
+                                // Get barber name from barber_id
+                                const barberName = booking.barberId
+                                    ? barbers.find(b => b.id === booking.barberId)?.name || 'Any Barber'
+                                    : 'Any Barber';
 
-                            return (
-                                <tr key={booking.id} className="hover:bg-gray-50/50 transition-colors">
-                                    <td className="py-4 px-8 font-medium text-dubai-dark-grey">
-                                        {booking.userName || 'Unknown'}
-                                    </td>
-                                    <td className="py-4 px-8 text-subtle-text">{serviceNames}</td>
-                                    <td className="py-4 px-8 text-subtle-text">{barberName}</td>
-                                    <td className="py-4 px-8 font-mono text-sm text-subtle-text">
-                                        {booking.date} {booking.timeSlot}
-                                    </td>
-                                    <td className="py-4 px-8">
-                                        <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${booking.status === 'confirmed' || booking.status === 'Confirmed' ? 'bg-green-100 text-green-600' :
-                                            booking.status === 'Pending' || booking.status === 'pending' ? 'bg-yellow-100 text-yellow-600' :
-                                                booking.status === 'Canceled' || booking.status === 'Cancelled' || booking.status === 'cancelled' ? 'bg-red-100 text-red-600' :
-                                                    'bg-blue-100 text-blue-600'
-                                            }`}>
-                                            {booking.status}
-                                        </span>
-                                    </td>
-                                    <td className="py-4 px-8 text-right">
-                                        <select
-                                            value={booking.status.toLowerCase()}
-                                            onChange={(e) => handleBookingStatusUpdate(booking.id, e.target.value as any)}
-                                            className="bg-white border border-gray-200 rounded-lg px-3 py-1 text-sm font-medium text-dubai-dark-grey focus:border-dubai-black focus:outline-none cursor-pointer hover:bg-gray-50 transition-colors"
-                                        >
-                                            <option value="pending">Pending</option>
-                                            <option value="confirmed">Confirmed</option>
-                                            <option value="completed">Completed</option>
-                                            <option value="cancelled">Cancelled</option>
-                                        </select>
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
+                                return (
+                                    <tr key={booking.id} className="hover:bg-white/5 transition-all duration-300 group">
+                                        <td className="py-5 px-8">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/50 text-xs font-bold">
+                                                    <User size={14} />
+                                                </div>
+                                                <span className="font-bold text-white group-hover:text-gold transition-colors">{booking.userName || 'Unknown'}</span>
+                                            </div>
+                                        </td>
+                                        <td className="py-5 px-8">
+                                            <div className="flex items-center gap-2 text-subtle-text text-sm">
+                                                <Scissors size={14} className="text-gold/50" />
+                                                {serviceNames}
+                                            </div>
+                                        </td>
+                                        <td className="py-5 px-8 text-subtle-text text-sm">{barberName}</td>
+                                        <td className="py-5 px-8">
+                                            <div className="flex items-center gap-2 text-white font-mono text-sm">
+                                                <Clock size={14} className="text-gold" />
+                                                {booking.date} <span className="text-white/30">|</span> {booking.timeSlot}
+                                            </div>
+                                        </td>
+                                        <td className="py-5 px-8">
+                                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${booking.status.toLowerCase() === 'confirmed' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
+                                                    booking.status.toLowerCase() === 'pending' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
+                                                        booking.status.toLowerCase() === 'cancelled' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
+                                                            'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                                                }`}>
+                                                <span className={`w-1.5 h-1.5 rounded-full ${booking.status.toLowerCase() === 'confirmed' ? 'bg-green-400 animate-pulse' :
+                                                        booking.status.toLowerCase() === 'pending' ? 'bg-yellow-400' :
+                                                            booking.status.toLowerCase() === 'cancelled' ? 'bg-red-400' :
+                                                                'bg-blue-400'
+                                                    }`} />
+                                                {booking.status}
+                                            </span>
+                                        </td>
+                                        <td className="py-5 px-8 text-right">
+                                            <div className="inline-flex bg-black/40 rounded-lg border border-white/10 p-1">
+                                                <select
+                                                    value={booking.status.toLowerCase()}
+                                                    onChange={(e) => handleBookingStatusUpdate(booking.id, e.target.value as any)}
+                                                    className="bg-transparent text-xs font-bold text-white focus:outline-none cursor-pointer px-2 py-1"
+                                                >
+                                                    <option value="pending" className="bg-gray-900">Pending</option>
+                                                    <option value="confirmed" className="bg-gray-900">Confirmed</option>
+                                                    <option value="completed" className="bg-gray-900">Completed</option>
+                                                    <option value="cancelled" className="bg-gray-900">Cancelled</option>
+                                                </select>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
 
-                {filteredBookings.length === 0 && (
-                    <div className="text-center py-16">
-                        <p className="text-subtle-text text-lg">No bookings found.</p>
-                    </div>
-                )}
+                    {filteredBookings.length === 0 && (
+                        <div className="text-center py-16">
+                            <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 text-subtle-text">
+                                <Calendar size={24} />
+                            </div>
+                            <p className="text-subtle-text text-sm">No bookings found.</p>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

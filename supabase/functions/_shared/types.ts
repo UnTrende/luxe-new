@@ -32,6 +32,7 @@ export interface Service {
   category: string;
   image_url?: string; // Added for public URL
   image_path?: string; // Added for storage path
+  loyalty_points?: number; // Loyalty points awarded for this service
 }
 
 export interface Product {
@@ -150,6 +151,43 @@ export interface UserProfile {
   name: string;
   role: 'customer' | 'barber' | 'admin';
   phone?: string;
+  // Loyalty fields
+  total_confirmed_visits?: number;
+  redeemable_points?: number;
+  status_tier?: 'Silver' | 'Gold' | 'Platinum';
+}
+
+// Loyalty statistics (Spending-based system)
+export interface LoyaltyStats {
+  totalConfirmedVisits: number;
+  redeemablePoints: number;
+  statusTier: 'Silver' | 'Gold' | 'Platinum';
+  progressToNextTier: number;
+  nextTier: string;
+}
+
+// Loyalty history entry
+export interface LoyaltyHistoryEntry {
+  id: string;
+  user_id: string;
+  transaction_type: 'EARNED' | 'PENALTY' | 'REDEEMED';
+  points_amount: number;
+  description: string;
+  booking_id?: string;
+  created_at: string;
+}
+
+// Loyalty settings (Admin-configurable)
+export interface LoyaltySettings {
+  service_rate_silver: number;
+  service_rate_gold: number;
+  service_rate_platinum: number;
+  silver_threshold: number;
+  gold_threshold: number;
+  platinum_threshold: number;
+  late_cancellation_penalty: number;
+  no_show_penalty: number;
+  updated_at: string;
 }
 
 
@@ -257,4 +295,12 @@ export interface Api {
   }>;
   getBarberIdByUserId: (userId: string) => Promise<string | null>;
   supabase: any; // Add the supabase client property
+  
+  // Loyalty System
+  getLoyaltyStats: () => Promise<LoyaltyStats>;
+  getLoyaltyHistory: (limit?: number, offset?: number) => Promise<LoyaltyHistoryEntry[]>;
+  updateLoyaltySettings: (settings: Partial<LoyaltySettings>) => Promise<LoyaltySettings>;
+  processLoyaltyTransaction: (bookingId: string, amountPaid: number) => Promise<any>;
+  processPenaltyTransaction: (userId: string, penaltyType: 'late_cancellation' | 'no_show', bookingId?: string, reason?: string) => Promise<any>;
+  checkLoyaltyTierUpdate: () => Promise<any>;
 }

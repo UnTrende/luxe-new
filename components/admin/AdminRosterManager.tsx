@@ -3,6 +3,7 @@ import { toast } from 'react-toastify';
 import { Barber } from '../../types';
 import { api } from '../../services/api';
 import ExcelRosterButton from '../../components/ExcelRosterButton';
+import { Calendar, Clock, User, Trash2, Edit, ChevronDown, ChevronUp, FileSpreadsheet } from 'lucide-react';
 
 interface AdminRosterManagerProps {
     rosters: any[];
@@ -15,37 +16,52 @@ export const AdminRosterManager: React.FC<AdminRosterManagerProps> = ({ rosters,
     const [editingRoster, setEditingRoster] = useState<any | null>(null);
 
     return (
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 hover:border-dubai-gold/30 transition-all p-8">
-            <div className="flex justify-between items-center mb-8">
-                <div>
-                    <h2 className="text-2xl font-serif font-bold text-dubai-black">Roster Management</h2>
-                    <p className="text-subtle-text text-sm mt-1">Manage weekly schedules and shifts</p>
+        <div className="space-y-6">
+            {/* Header & Controls */}
+            <div className="flex flex-col md:flex-row justify-between items-end gap-4 bg-glass-card p-6 rounded-3xl border border-white/10 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 blur-[80px] rounded-full pointer-events-none" />
+
+                <div className="relative z-10">
+                    <h2 className="text-3xl font-serif font-bold text-white mb-2 flex items-center gap-3">
+                        <span className="p-2 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                            <Calendar size={24} />
+                        </span>
+                        Roster Management
+                    </h2>
+                    <p className="text-subtle-text text-sm">Manage weekly schedules and shifts</p>
                 </div>
-                <ExcelRosterButton onRosterUpdate={() => {
-                    api.getRosters().then(data => setRosters(data.rosters || []));
-                    toast.success('Rosters refreshed');
-                }} />
+
+                <div className="relative z-10">
+                    <ExcelRosterButton onRosterUpdate={() => {
+                        api.getRosters().then(data => setRosters(data.rosters || []));
+                        toast.success('Rosters refreshed');
+                    }} />
+                </div>
             </div>
 
             {/* Roster List */}
             <div className="space-y-4">
                 {rosters.length === 0 ? (
-                    <div className="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                        <p className="text-gray-500">No rosters found. Upload an Excel file to get started.</p>
+                    <div className="text-center py-16 bg-glass-card rounded-3xl border border-white/10 border-dashed">
+                        <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 text-subtle-text">
+                            <FileSpreadsheet size={24} />
+                        </div>
+                        <p className="text-subtle-text text-sm">No rosters found. Upload an Excel file to get started.</p>
                     </div>
                 ) : (
                     <div className="grid gap-4">
                         {rosters.map((roster, idx) => (
-                            <div key={idx} className="border border-gray-100 rounded-xl hover:border-dubai-gold/30 transition-all overflow-hidden">
+                            <div key={idx} className="bg-glass-card border border-white/10 rounded-2xl overflow-hidden transition-all duration-300 hover:border-gold/30 hover:shadow-glass group">
                                 <div
-                                    className="p-4 flex justify-between items-center bg-white hover:bg-gray-50"
+                                    className="p-5 flex justify-between items-center cursor-pointer hover:bg-white/5 transition-colors"
+                                    onClick={() => setExpandedRosterId(expandedRosterId === (roster.id || idx.toString()) ? null : (roster.id || idx.toString()))}
                                 >
-                                    <div
-                                        className="flex-1 cursor-pointer"
-                                        onClick={() => setExpandedRosterId(expandedRosterId === (roster.id || idx.toString()) ? null : (roster.id || idx.toString()))}
-                                    >
-                                        <h3 className="font-bold text-dubai-black">{roster.week_start_date} - {roster.week_end_date}</h3>
-                                        <p className="text-sm text-gray-500">{roster.shifts?.length || 0} shifts scheduled</p>
+                                    <div className="flex-1">
+                                        <h3 className="font-bold text-white text-lg flex items-center gap-3">
+                                            <Calendar size={18} className="text-gold" />
+                                            {roster.week_start_date} <span className="text-subtle-text text-sm font-normal">to</span> {roster.week_end_date}
+                                        </h3>
+                                        <p className="text-sm text-subtle-text mt-1 ml-8">{roster.shifts?.length || 0} shifts scheduled</p>
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <button
@@ -53,9 +69,10 @@ export const AdminRosterManager: React.FC<AdminRosterManagerProps> = ({ rosters,
                                                 e.stopPropagation();
                                                 setEditingRoster(roster);
                                             }}
-                                            className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-bold hover:bg-blue-200 transition-colors"
+                                            className="p-2 bg-blue-500/10 text-blue-400 rounded-lg hover:bg-blue-500/20 transition-colors border border-blue-500/20"
+                                            title="Edit Roster"
                                         >
-                                            Edit
+                                            <Edit size={16} />
                                         </button>
                                         <button
                                             onClick={async (e) => {
@@ -73,26 +90,27 @@ export const AdminRosterManager: React.FC<AdminRosterManagerProps> = ({ rosters,
                                                     }
                                                 }
                                             }}
-                                            className="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-xs font-bold hover:bg-red-200 transition-colors"
+                                            className="p-2 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 transition-colors border border-red-500/20"
+                                            title="Delete Roster"
                                         >
-                                            Delete
+                                            <Trash2 size={16} />
                                         </button>
-                                        <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">
+                                        <span className="px-3 py-1 bg-green-500/10 text-green-400 rounded-full text-xs font-bold border border-green-500/20 uppercase tracking-wide">
                                             Active
                                         </span>
-                                        <span
-                                            className="text-gray-400 cursor-pointer"
-                                            onClick={() => setExpandedRosterId(expandedRosterId === (roster.id || idx.toString()) ? null : (roster.id || idx.toString()))}
-                                        >
-                                            {expandedRosterId === (roster.id || idx.toString()) ? '▲' : '▼'}
+                                        <span className="text-subtle-text group-hover:text-white transition-colors">
+                                            {expandedRosterId === (roster.id || idx.toString()) ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                                         </span>
                                     </div>
                                 </div>
 
                                 {/* Expanded Roster Details */}
                                 {expandedRosterId === (roster.id || idx.toString()) && (
-                                    <div className="bg-gray-50 p-4 border-t border-gray-100">
-                                        <h4 className="font-bold text-xs uppercase tracking-wider text-subtle-text mb-3">Weekly Schedule</h4>
+                                    <div className="bg-black/20 p-6 border-t border-white/10">
+                                        <h4 className="font-bold text-xs uppercase tracking-[0.2em] text-gold mb-4 flex items-center gap-2">
+                                            <Clock size={14} />
+                                            Weekly Schedule
+                                        </h4>
                                         {roster.shifts && roster.shifts.length > 0 ? (
                                             <div className="overflow-x-auto">
                                                 {/* Excel-style table */}
@@ -111,16 +129,16 @@ export const AdminRosterManager: React.FC<AdminRosterManagerProps> = ({ rosters,
                                                     });
 
                                                     return (
-                                                        <div className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm">
+                                                        <div className="overflow-hidden rounded-xl border border-white/10 bg-white/5">
                                                             <table className="w-full">
                                                                 <thead>
-                                                                    <tr className="border-b border-gray-100 bg-gray-50/50">
-                                                                        <th className="p-6 text-left text-subtle-text text-[10px] font-bold uppercase tracking-widest min-w-[150px]">
+                                                                    <tr className="border-b border-white/10 bg-white/5">
+                                                                        <th className="p-4 text-left text-subtle-text text-[10px] font-bold uppercase tracking-widest min-w-[150px]">
                                                                             Staff Member
                                                                         </th>
                                                                         {dates.map((date) => (
-                                                                            <th key={date} className="p-6 text-center border-l border-gray-100 min-w-[120px]">
-                                                                                <div className="text-[10px] font-bold text-dubai-black uppercase tracking-widest">
+                                                                            <th key={date} className="p-4 text-center border-l border-white/10 min-w-[120px]">
+                                                                                <div className="text-[10px] font-bold text-white uppercase tracking-widest">
                                                                                     {new Date(date).toLocaleDateString('en-US', { weekday: 'short' })}
                                                                                 </div>
                                                                                 <div className="text-[10px] text-subtle-text mt-1 font-mono opacity-75">
@@ -130,18 +148,18 @@ export const AdminRosterManager: React.FC<AdminRosterManagerProps> = ({ rosters,
                                                                         ))}
                                                                     </tr>
                                                                 </thead>
-                                                                <tbody className="divide-y divide-gray-100">
+                                                                <tbody className="divide-y divide-white/5">
                                                                     {barberIds.map((barberId) => {
                                                                         const barber = barbers.find(b => b.id === barberId);
                                                                         return (
-                                                                            <tr key={barberId} className="hover:bg-gray-50 transition-colors">
-                                                                                <td className="p-6 border-r border-gray-100 bg-white">
-                                                                                    <div className="flex items-center gap-4">
-                                                                                        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-dubai-dark-grey font-bold text-xs border border-gray-200">
+                                                                            <tr key={barberId} className="hover:bg-white/5 transition-colors">
+                                                                                <td className="p-4 border-r border-white/10 bg-white/5">
+                                                                                    <div className="flex items-center gap-3">
+                                                                                        <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/70 font-bold text-xs border border-white/10">
                                                                                             {barber?.name?.charAt(0) || '?'}
                                                                                         </div>
                                                                                         <div>
-                                                                                            <div className="font-bold text-dubai-black text-sm">{barber?.name || 'Unknown Barber'}</div>
+                                                                                            <div className="font-bold text-white text-sm">{barber?.name || 'Unknown Barber'}</div>
                                                                                             <div className="text-[10px] text-subtle-text uppercase tracking-wider mt-0.5">Barber</div>
                                                                                         </div>
                                                                                     </div>
@@ -149,17 +167,17 @@ export const AdminRosterManager: React.FC<AdminRosterManagerProps> = ({ rosters,
                                                                                 {dates.map((date) => {
                                                                                     const shift = shiftLookup[barberId]?.[date];
                                                                                     return (
-                                                                                        <td key={date} className="p-4 text-center border-l border-gray-100 bg-white">
+                                                                                        <td key={date} className="p-3 text-center border-l border-white/10">
                                                                                             {shift ? (
-                                                                                                <div className="inline-flex flex-col items-center justify-center">
-                                                                                                    <div className="flex items-center gap-2 text-dubai-black">
+                                                                                                <div className="inline-flex flex-col items-center justify-center bg-green-500/10 border border-green-500/20 rounded-lg px-3 py-2 w-full">
+                                                                                                    <div className="flex items-center gap-1.5 text-green-400">
                                                                                                         <span className="font-mono text-xs font-bold">{shift.start_time}</span>
-                                                                                                        <span className="text-[10px] text-subtle-text">to</span>
+                                                                                                        <span className="text-[10px] opacity-50">-</span>
                                                                                                         <span className="font-mono text-xs font-bold">{shift.end_time}</span>
                                                                                                     </div>
                                                                                                 </div>
                                                                                             ) : (
-                                                                                                <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">
+                                                                                                <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest">
                                                                                                     OFF
                                                                                                 </span>
                                                                                             )}
@@ -176,7 +194,7 @@ export const AdminRosterManager: React.FC<AdminRosterManagerProps> = ({ rosters,
                                                 })()}
                                             </div>
                                         ) : (
-                                            <p className="text-sm text-gray-500 italic">No shifts defined for this roster.</p>
+                                            <p className="text-sm text-subtle-text italic">No shifts defined for this roster.</p>
                                         )}
                                     </div>
                                 )}
@@ -188,18 +206,16 @@ export const AdminRosterManager: React.FC<AdminRosterManagerProps> = ({ rosters,
 
             {/* Edit Roster Modal */}
             {editingRoster && (
-                <div className="fixed inset-0 z-50">
-                    <ExcelRosterButton
-                        editMode={true}
-                        existingRoster={editingRoster}
-                        onRosterUpdate={async () => {
-                            setEditingRoster(null);
-                            const updated = await api.getRosters();
-                            setRosters(updated.rosters || []);
-                            toast.success('Roster updated successfully');
-                        }}
-                    />
-                </div>
+                <ExcelRosterButton
+                    editMode={true}
+                    existingRoster={editingRoster}
+                    onRosterUpdate={async () => {
+                        setEditingRoster(null);
+                        const updated = await api.getRosters();
+                        setRosters(updated.rosters || []);
+                        toast.success('Roster updated successfully');
+                    }}
+                />
             )}
         </div>
     );

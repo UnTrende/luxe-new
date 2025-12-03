@@ -25,8 +25,15 @@ const ProductOrderPage = lazy(() => import('./pages/ProductOrderPage'));
 const OrderConfirmedPage = lazy(() => import('./pages/OrderConfirmedPage'));
 const MyOrdersPage = lazy(() => import('./pages/MyOrdersPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const EditProfilePage = lazy(() => import('./pages/EditProfilePage'));
+const PaymentPage = lazy(() => import('./pages/PaymentPage'));
+const SettingsPage = lazy(() => import('./pages/SettingsPage'));
+const SupportPage = lazy(() => import('./pages/SupportPage'));
+const LoyaltyHistoryPage = lazy(() => import('./pages/LoyaltyHistoryPage'));
 const AIHairstylePage = lazy(() => import('./pages/AIHairstylePage'));
 const ServicesPage = lazy(() => import('./pages/ServicesPage'));
+
+const AdminLoyaltySettingsPage = lazy(() => import('./pages/AdminLoyaltySettingsPage'));
 
 // Navigation logger component to track all route changes
 const NavigationLogger: React.FC = () => {
@@ -72,6 +79,11 @@ function App() {
                 <Route path="my-bookings" element={<MyBookingsPage />} />
                 <Route path="my-orders" element={<MyOrdersPage />} />
                 <Route path="profile" element={<ProfilePage />} />
+                <Route path="profile/edit" element={<EditProfilePage />} />
+                <Route path="profile/payment" element={<PaymentPage />} />
+                <Route path="profile/settings" element={<SettingsPage />} />
+                <Route path="profile/support" element={<SupportPage />} />
+                <Route path="profile/loyalty-history" element={<LoyaltyHistoryPage />} />
                 <Route path="ai-hairstyles" element={<AIHairstylePage />} />
                 <Route path="services" element={<ServicesPage />} />
                 <Route path="login" element={<LoginPage />} />
@@ -80,6 +92,7 @@ function App() {
               {/* Admin Routes - "The Empire View" */}
               <Route path="admin" element={<AdminLayout />}>
                 <Route index element={<AdminDashboardPageNew />} />
+                <Route path="loyalty-settings" element={<AdminLoyaltySettingsPage />} />
                 {/* Add sub-routes for admin features here */}
               </Route>
 

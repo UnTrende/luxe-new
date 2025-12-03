@@ -4,6 +4,7 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { supabaseAdmin } from '../_shared/supabaseClient.ts';
+import { authenticateUser } from '../_shared/auth.ts';
 
 serve(async (req) => {
   // This is needed if you're planning to invoke your function from a browser.
@@ -12,6 +13,9 @@ serve(async (req) => {
   }
 
   try {
+    // Authenticate user
+    const user = await authenticateUser(req);
+    
     console.log("Fetching barbers from database...");
     
     const { data: barbers, error } = await supabaseAdmin

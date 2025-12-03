@@ -51,7 +51,7 @@ serve(async (req) => {
     }
 
     // Parse the request body
-    const { serviceId, ...serviceData } = await req.json();
+    const { serviceId, serviceData } = await req.json();
 
     // Validate serviceId
     if (!serviceId) {

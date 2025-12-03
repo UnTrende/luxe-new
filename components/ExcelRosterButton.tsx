@@ -1,6 +1,6 @@
-// components/ExcelRosterButton.tsx
 import React, { useState, useEffect } from 'react';
-import { Grid3X3, X } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Grid3X3, X, FileSpreadsheet, Save, Loader2 } from 'lucide-react';
 import SimpleExcelRoster from './SimpleExcelRoster';
 import { api } from '../services/api';
 
@@ -61,19 +61,21 @@ export default function ExcelRosterButton({ onRosterUpdate, editMode = false, ex
       handleOpenExcel();
     }
   }, [editMode, existingRoster]);
-
   if (showExcelRoster) {
-    return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-        <div className="bg-dubai-black w-full max-w-[90vw] lg:max-w-7xl h-[85vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 border border-dubai-gold/20">
-          <div className="p-4 border-b border-dubai-gold/20 flex justify-between items-center bg-dubai-black">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-dubai-gold/10 rounded-lg">
-                <Grid3X3 className="w-5 h-5 text-dubai-gold" />
+    return createPortal(
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+        <div className="bg-glass-card w-screen h-screen rounded-none shadow-none overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 border-none relative">
+          <div className="absolute top-0 right-0 w-full h-32 bg-gradient-to-b from-gold/5 to-transparent pointer-events-none" />
+
+          {/* Header */}
+          <div className="p-6 border-b border-white/10 flex justify-between items-center relative z-10">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gold/10 rounded-xl border border-gold/20 text-gold">
+                <Grid3X3 size={24} />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-dubai-gold">{editMode ? 'Edit Roster' : 'Roster Management'}</h2>
-                <p className="text-xs text-white/60">{editMode ? 'Update weekly schedule' : 'Manage weekly schedules and shifts'}</p>
+                <h2 className="text-2xl font-serif font-bold text-white">{editMode ? 'Edit Roster' : 'Roster Management'}</h2>
+                <p className="text-sm text-subtle-text">{editMode ? 'Update weekly schedule' : 'Manage weekly schedules and shifts'}</p>
               </div>
             </div>
             <button
@@ -84,13 +86,14 @@ export default function ExcelRosterButton({ onRosterUpdate, editMode = false, ex
                   onRosterUpdate();
                 }
               }}
-              className="bg-transparent text-white hover:text-dubai-gold hover:bg-white/5 px-4 py-2 rounded-lg flex items-center gap-2 transition-all border border-white/20 hover:border-dubai-gold/50 shadow-sm"
+              className="p-2 hover:bg-white/10 rounded-full text-white/50 hover:text-white transition-all"
             >
-              <X className="w-4 h-4" />
-              Close
+              <X size={24} />
             </button>
           </div>
-          <div className="flex-1 overflow-hidden bg-dubai-black relative">
+
+          {/* Content */}
+          <div className="flex-1 overflow-hidden relative z-10">
             <div className="absolute inset-0 overflow-auto p-6">
               <SimpleExcelRoster
                 barbers={barbers}
@@ -101,7 +104,8 @@ export default function ExcelRosterButton({ onRosterUpdate, editMode = false, ex
             </div>
           </div>
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }
 
@@ -109,10 +113,10 @@ export default function ExcelRosterButton({ onRosterUpdate, editMode = false, ex
     <button
       onClick={handleOpenExcel}
       disabled={loading}
-      className="bg-dubai-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-900 disabled:opacity-50 flex items-center gap-2 shadow-lg transition-all"
+      className="bg-gold text-black px-6 py-3 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-white transition-all shadow-[0_0_20px_rgba(212,175,55,0.2)] flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
     >
-      <Grid3X3 className="w-5 h-5" />
-      {loading ? 'Loading...' : editMode ? 'Edit Roster' : 'Create Excel Roster'}
+      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
+      {loading ? 'Loading...' : editMode ? 'Edit Roster' : 'Create Roster'}
     </button>
   );
 }

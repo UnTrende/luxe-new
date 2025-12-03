@@ -4,6 +4,7 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { supabaseAdmin } from '../_shared/supabaseClient.ts';
+import { authenticateAdmin } from '../_shared/auth.ts';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -11,6 +12,9 @@ serve(async (req) => {
   }
 
   try {
+    // Authenticate admin user
+    const admin = await authenticateAdmin(req);
+    
     // Get all users from app_users table
     const { data: users, error } = await supabaseAdmin
       .from('app_users')

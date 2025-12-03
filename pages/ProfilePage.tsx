@@ -1,12 +1,20 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { User, Mail, LogOut, CreditCard, Settings, HelpCircle, Shield, Star, Calendar, Scissors } from 'lucide-react';
+import { User, Mail, LogOut, CreditCard, Settings, HelpCircle, Shield, Star, Calendar, Scissors, TrendingUp } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { api } from '../services/api';
+import { BookingWithDetails, LoyaltyStats } from '../types';
 
 const ProfilePage: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { user: loggedInUser, isLoading, signOut } = useAuth();
+
+    // State for real booking count and loyalty stats
+    const [bookingCount, setBookingCount] = useState<number>(0);
+    const [isLoadingBookings, setIsLoadingBookings] = useState(true);
+    const [loyaltyStats, setLoyaltyStats] = useState<LoyaltyStats | null>(null);
+    const [isLoadingLoyalty, setIsLoadingLoyalty] = useState(true);
 
     const handleLogout = async () => {
         await signOut();
@@ -19,23 +27,72 @@ const ProfilePage: React.FC = () => {
         }
     }, [loggedInUser, isLoading, navigate, location]);
 
+    // Fetch real booking count and loyalty stats using existing APIs
+    useEffect(() => {
+        if (loggedInUser) {
+            const fetchData = async () => {
+                try {
+                    // Fetch bookings count
+                    setIsLoadingBookings(true);
+                    const bookings = await api.getMyBookings();
+                    setBookingCount(bookings.length);
+                } catch (error) {
+                    console.error('Error fetching bookings count:', error);
+                    setBookingCount(0);
+                } finally {
+                    setIsLoadingBookings(false);
+                }
+
+                try {
+                    // Fetch loyalty stats
+                    setIsLoadingLoyalty(true);
+                    const stats = await api.getLoyaltyStats();
+                    setLoyaltyStats(stats);
+                } catch (error) {
+                    console.error('Error fetching loyalty stats:', error);
+                    setLoyaltyStats(null);
+                } finally {
+                    setIsLoadingLoyalty(false);
+                }
+            };
+            fetchData();
+        }
+    }, [loggedInUser]);
+
     if (isLoading || !loggedInUser) {
         return <div className="text-center p-10 text-subtle-text">Loading profile...</div>;
     }
 
-    // Mock Stats
+    // Real Stats (with actual booking count and loyalty data)
+    // Format points with commas for better readability
+    const formatPoints = (points: number) => {
+        return points.toLocaleString();
+    };
+
     const stats = [
-        { label: 'Bookings', value: '12', icon: <Calendar size={14} /> },
-        { label: 'Points', value: '2,450', icon: <Star size={14} /> },
-        { label: 'Status', value: 'Gold', icon: <Shield size={14} /> },
+        { 
+            label: 'Bookings', 
+            value: isLoadingBookings ? '...' : bookingCount.toString(), 
+            icon: <Calendar size={14} /> 
+        },
+        { 
+            label: 'Points', 
+            value: isLoadingLoyalty ? '...' : formatPoints(loyaltyStats?.redeemable_points || 0), 
+            icon: <Star size={14} /> 
+        },
+        { 
+            label: 'Status', 
+            value: isLoadingLoyalty ? '...' : (loyaltyStats?.status_tier || 'Silver'), 
+            icon: <Shield size={14} /> 
+        },
     ];
 
-    // Action Grid Items
+    // Action Grid Items with navigation handlers
     const actions = [
-        { label: 'Edit Profile', icon: <User size={24} />, path: '/profile/edit' },
-        { label: 'Payment', icon: <CreditCard size={24} />, path: '/profile/payment' },
-        { label: 'Settings', icon: <Settings size={24} />, path: '/profile/settings' },
-        { label: 'Support', icon: <HelpCircle size={24} />, path: '/profile/support' },
+        { label: 'Edit Profile', icon: <User size={24} />, path: '/profile/edit', onClick: () => navigate('/profile/edit') },
+        { label: 'Payment', icon: <CreditCard size={24} />, path: '/profile/payment', onClick: () => navigate('/profile/payment') },
+        { label: 'Settings', icon: <Settings size={24} />, path: '/profile/settings', onClick: () => navigate('/profile/settings') },
+        { label: 'Support', icon: <HelpCircle size={24} />, path: '/profile/support', onClick: () => navigate('/profile/support') },
     ];
 
     return (
@@ -93,15 +150,70 @@ const ProfilePage: React.FC = () => {
                 {/* Stats Dashboard */}
                 <div className="grid grid-cols-3 gap-4">
                     {stats.map((stat, index) => (
-                        <div key={index} className="bg-glass-card border border-white/5 p-4 rounded-2xl flex flex-col items-center justify-center gap-2 backdrop-blur-md">
+                        <button
+                            key={index}
+                            onClick={() => {
+                                if (stat.label === 'Points' || stat.label === 'Status') {
+                                    navigate('/profile/loyalty-history');
+                                }
+                            }}
+                            className={`bg-glass-card border border-white/5 p-4 rounded-2xl flex flex-col items-center justify-center gap-2 backdrop-blur-md transition-all ${
+                                (stat.label === 'Points' || stat.label === 'Status') ? 'hover:border-gold/30 cursor-pointer' : 'cursor-default'
+                            }`}
+                        >
                             <div className="text-gold opacity-80">{stat.icon}</div>
                             <div className="text-center">
                                 <p className="text-xl font-bold text-white">{stat.value}</p>
                                 <p className="text-[10px] text-subtle-text uppercase tracking-widest">{stat.label}</p>
                             </div>
-                        </div>
+                        </button>
                     ))}
                 </div>
+
+                {/* Loyalty Progress (shown when not loading and has next tier) */}
+                {!isLoadingLoyalty && loyaltyStats && loyaltyStats.next_tier && (
+                    <div className="bg-glass-card border border-white/5 rounded-2xl p-5 space-y-3">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <TrendingUp size={16} className="text-gold" />
+                                <h3 className="text-white font-medium text-sm">Progress to {loyaltyStats.next_tier}</h3>
+                            </div>
+                            <span className="text-xs text-subtle-text">
+                                {loyaltyStats.visits_to_next_tier} {loyaltyStats.visits_to_next_tier === 1 ? 'visit' : 'visits'} away
+                            </span>
+                        </div>
+                        
+                        {/* Progress Bar */}
+                        <div className="relative w-full h-2 bg-white/5 rounded-full overflow-hidden">
+                            <div 
+                                className="absolute top-0 left-0 h-full bg-gold-gradient transition-all duration-500"
+                                style={{ 
+                                    width: `${Math.min(100, (loyaltyStats.total_confirmed_visits / (loyaltyStats.total_confirmed_visits + loyaltyStats.visits_to_next_tier)) * 100)}%` 
+                                }}
+                            />
+                        </div>
+
+                        <div className="flex items-center justify-between text-xs">
+                            <span className="text-subtle-text">
+                                {loyaltyStats.tier_benefits.current_points_per_dollar} pts/$1 now
+                            </span>
+                            <span className="text-gold font-bold">
+                                → {loyaltyStats.tier_benefits.next_points_per_dollar} pts/$1 at {loyaltyStats.next_tier}
+                            </span>
+                        </div>
+                    </div>
+                )}
+
+                {/* Max Tier Achieved */}
+                {!isLoadingLoyalty && loyaltyStats && loyaltyStats.status_tier === 'Platinum' && (
+                    <div className="bg-gradient-to-r from-purple-900/20 to-gold/20 border border-gold/30 rounded-2xl p-5 text-center">
+                        <div className="flex items-center justify-center gap-2 mb-2">
+                            <Shield size={20} className="text-gold" />
+                            <h3 className="text-gold font-serif font-bold text-lg">Platinum Status</h3>
+                        </div>
+                        <p className="text-xs text-subtle-text">You've reached the highest tier! Earning {loyaltyStats.tier_benefits.current_points_per_dollar} points per dollar spent.</p>
+                    </div>
+                )}
 
                 {/* Action Grid */}
                 <div>
@@ -110,6 +222,7 @@ const ProfilePage: React.FC = () => {
                         {actions.map((action, index) => (
                             <button
                                 key={index}
+                                onClick={action.onClick}
                                 className="bg-white/5 hover:bg-white/10 border border-white/5 hover:border-gold/30 p-6 rounded-2xl flex flex-col items-center gap-3 transition-all duration-300 group"
                             >
                                 <div className="text-white group-hover:text-gold transition-colors duration-300 transform group-hover:scale-110">
