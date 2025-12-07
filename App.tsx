@@ -8,6 +8,12 @@ import { AuthProvider } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import { isSupabaseConfigured } from './services/supabaseClient';
+import ErrorBoundary from './components/ErrorBoundary';
+import { initMonitoring } from './utils/monitoring';
+import { api } from './services/api';
+
+// Initialize monitoring
+initMonitoring();
 
 // Lazy load all page components for better performance
 const HomePage = lazy(() => import('./pages/HomePage'));
@@ -52,61 +58,67 @@ const NavigationLogger: React.FC = () => {
 };
 
 function App() {
+  useEffect(() => {
+    api.fetchCSRFToken();
+  }, []);
+
   return (
-    <AuthProvider>
-      <SettingsProvider>
-        {!isSupabaseConfigured && (
-          <div
-            className="bg-yellow-500 text-black p-2 text-center font-semibold text-sm shadow-md"
-            aria-live="polite"
-          >
-            App is running in Demo Mode. Backend is not configured.
-          </div>
-        )}
-        <HashRouter>
-          <NavigationLogger />
-          <Suspense fallback={<LoadingSpinner />}>
-            <Routes>
-              {/* Customer Routes - "The Virtual Concierge" */}
-              <Route element={<CustomerLayout />}>
-                <Route index element={<HomePage />} />
-                <Route path="barbers" element={<BarbersPage />} />
-                <Route path="barbers/:id" element={<BarberPublicProfilePage />} />
-                <Route path="book/:barberId" element={<BookingPage />} />
-                <Route path="products" element={<ProductsPage />} />
-                <Route path="product-order/:id" element={<ProductOrderPage />} />
-                <Route path="order-confirmed/:orderId" element={<OrderConfirmedPage />} />
-                <Route path="my-bookings" element={<MyBookingsPage />} />
-                <Route path="my-orders" element={<MyOrdersPage />} />
-                <Route path="profile" element={<ProfilePage />} />
-                <Route path="profile/edit" element={<EditProfilePage />} />
-                <Route path="profile/payment" element={<PaymentPage />} />
-                <Route path="profile/settings" element={<SettingsPage />} />
-                <Route path="profile/support" element={<SupportPage />} />
-                <Route path="profile/loyalty-history" element={<LoyaltyHistoryPage />} />
-                <Route path="ai-hairstyles" element={<AIHairstylePage />} />
-                <Route path="services" element={<ServicesPage />} />
-                <Route path="login" element={<LoginPage />} />
-              </Route>
+    <ErrorBoundary>
+      <AuthProvider>
+        <SettingsProvider>
+          {!isSupabaseConfigured && (
+            <div
+              className="bg-yellow-500 text-black p-2 text-center font-semibold text-sm shadow-md"
+              aria-live="polite"
+            >
+              App is running in Demo Mode. Backend is not configured.
+            </div>
+          )}
+          <HashRouter>
+            <NavigationLogger />
+            <Suspense fallback={<LoadingSpinner />}>
+              <Routes>
+                {/* Customer Routes - "The Virtual Concierge" */}
+                <Route element={<CustomerLayout />}>
+                  <Route index element={<HomePage />} />
+                  <Route path="barbers" element={<BarbersPage />} />
+                  <Route path="barbers/:id" element={<BarberPublicProfilePage />} />
+                  <Route path="book/:barberId" element={<BookingPage />} />
+                  <Route path="products" element={<ProductsPage />} />
+                  <Route path="product-order/:id" element={<ProductOrderPage />} />
+                  <Route path="order-confirmed/:orderId" element={<OrderConfirmedPage />} />
+                  <Route path="my-bookings" element={<MyBookingsPage />} />
+                  <Route path="my-orders" element={<MyOrdersPage />} />
+                  <Route path="profile" element={<ProfilePage />} />
+                  <Route path="profile/edit" element={<EditProfilePage />} />
+                  <Route path="profile/payment" element={<PaymentPage />} />
+                  <Route path="profile/settings" element={<SettingsPage />} />
+                  <Route path="profile/support" element={<SupportPage />} />
+                  <Route path="profile/loyalty-history" element={<LoyaltyHistoryPage />} />
+                  <Route path="ai-hairstyles" element={<AIHairstylePage />} />
+                  <Route path="services" element={<ServicesPage />} />
+                  <Route path="login" element={<LoginPage />} />
+                </Route>
 
-              {/* Admin Routes - "The Empire View" */}
-              <Route path="admin" element={<AdminLayout />}>
-                <Route index element={<AdminDashboardPageNew />} />
-                <Route path="loyalty-settings" element={<AdminLoyaltySettingsPage />} />
-                {/* Add sub-routes for admin features here */}
-              </Route>
+                {/* Admin Routes - "The Empire View" */}
+                <Route path="admin" element={<AdminLayout />}>
+                  <Route index element={<AdminDashboardPageNew />} />
+                  <Route path="loyalty-settings" element={<AdminLoyaltySettingsPage />} />
+                  {/* Add sub-routes for admin features here */}
+                </Route>
 
-              {/* Barber Routes - "The Atelier" */}
-              <Route path="barber-admin" element={<BarberLayout />}>
-                <Route index element={<BarberDashboardPage />} />
-                <Route path="appointments" element={<BarberAppointmentsPage />} />
-                <Route path="profile" element={<BarberProfilePage />} />
-              </Route>
-            </Routes>
-          </Suspense>
-        </HashRouter>
-      </SettingsProvider>
-    </AuthProvider>
+                {/* Barber Routes - "The Atelier" */}
+                <Route path="barber-admin" element={<BarberLayout />}>
+                  <Route index element={<BarberDashboardPage />} />
+                  <Route path="appointments" element={<BarberAppointmentsPage />} />
+                  <Route path="profile" element={<BarberProfilePage />} />
+                </Route>
+              </Routes>
+            </Suspense>
+          </HashRouter>
+        </SettingsProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

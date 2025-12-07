@@ -15,17 +15,17 @@ serve(async (req) => {
   try {
     // Authenticate user
     const user = await authenticateUser(req);
-    
+
     const { data: orders, error: ordersError } = await supabaseAdmin
       .from('product_orders')
       .select(`
         id,
         productId:product_id,
         userId:user_id,
-        userName:username,
         quantity,
         status,
         timestamp,
+        app_users (id, email, name),
         products!inner (name, imageUrl:imageurl, price)
       `)
       .eq('user_id', user.id);

@@ -4,6 +4,7 @@ import { useParams, Link } from 'react-router-dom';
 import { OrderWithDetails } from '../types';
 import { PartyPopper, Loader } from 'lucide-react';
 import { api } from '../services/api';
+import { resolveProductImage } from '../services/imageResolver';
 
 const OrderConfirmedPage: React.FC = () => {
     const { orderId } = useParams<{ orderId: string }>();

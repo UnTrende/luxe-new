@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { Upload, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { supabase } from '../services/supabaseClient';
+import type { StorageBucket } from '../services/imageResolver';
 
 interface ImageUploadProps {
   onImageUpload: (imagePath: string, publicUrl: string) => void;
   currentImage?: string;
-  bucket: 'product-images' | 'barber-photos' | 'service-images';
+  bucket: StorageBucket;
   entityType: 'product' | 'barber' | 'service';
   entityId?: string;
 }
@@ -61,7 +62,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
       // Get the Supabase URL from environment
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      
+
       // Get current session for authentication
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;

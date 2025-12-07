@@ -230,9 +230,9 @@ export default function AdminDashboardPageNew() {
       api.syncUserRole(user.id, 'admin').catch(err => console.error('Failed to sync admin role:', err));
     }
 
-    // Polling
-    const interval = setInterval(fetchDashboardData, 30000);
-    return () => clearInterval(interval);
+    // Polling - COMMENTED OUT TO STOP AUTOMATIC REFRESH
+    // const interval = setInterval(fetchDashboardData, 30000);
+    // return () => clearInterval(interval);
   }, [user, authLoading]);
 
   if (authLoading || loading) {
@@ -350,13 +350,19 @@ export default function AdminDashboardPageNew() {
             <select
               value={activeTab}
               onChange={(e) => setActiveTab(e.target.value)}
-              className="appearance-none bg-black/50 border border-white/10 rounded-xl px-4 py-2 pr-8 text-sm font-bold text-white focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/50 transition-all"
+              className="appearance-none w-full bg-card-bg text-white pl-10 pr-4 py-2 rounded-lg border border-gray-700/50 focus:outline-none focus:border-gold/50"
             >
-              {menuItems.map(item => (
-                <option key={item.id} value={item.id} className="bg-card-bg text-white">
-                  {item.icon} {item.label}
-                </option>
-              ))}
+              <option value="Overview" className="bg-card-bg text-white">Overview</option>
+              <option value="Services" className="bg-card-bg text-white">Services</option>
+              <option value="Products" className="bg-card-bg text-white">Products</option>
+              <option value="Orders" className="bg-card-bg text-white">Orders</option>
+              <option value="Barbers" className="bg-card-bg text-white">Barbers</option>
+              <option value="Users" className="bg-card-bg text-white">Users</option>
+              <option value="Bookings" className="bg-card-bg text-white">Bookings</option>
+              <option value="Rosters" className="bg-card-bg text-white">Rosters</option>
+              <option value="Attendance" className="bg-card-bg text-white">Attendance</option>
+              <option value="Settings" className="bg-card-bg text-white">Settings</option>
+              <option value="Analytics" className="bg-card-bg text-white">Analytics</option>
             </select>
             <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gold text-xs">
               ▼
@@ -477,7 +483,7 @@ export default function AdminDashboardPageNew() {
                 stats={stats}
               />
             )}
-            
+
             {activeTab === 'Loyalty' && (
               <AdminLoyaltyDashboard />
             )}

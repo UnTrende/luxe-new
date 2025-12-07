@@ -198,13 +198,12 @@ export const AdminBarbersManager: React.FC<AdminBarbersManagerProps> = ({ barber
                                 </label>
                                 <div className="bg-black/20 rounded-xl p-2 border border-white/5">
                                     <ImageUpload
-                                        onImageUploaded={(publicUrl: string, imagePath: string) => {
+                                        onImageUpload={(imagePath: string, publicUrl: string) => {
                                             setBarberPhotoPath(imagePath);
                                             setBarberPhotoUrl(publicUrl);
                                         }}
-                                        currentImageUrl={barberPhotoUrl || currentBarber?.photo}
+                                        currentImage={barberPhotoUrl || currentBarber?.photo}
                                         bucket="luxecut-photos"
-                                        folder="barbers"
                                         entityType="barber"
                                         entityId={currentBarber?.id}
                                     />

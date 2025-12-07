@@ -4,7 +4,7 @@ import { authenticateAdmin } from '../_shared/auth.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, X-CSRF-Token',
 };
 
 serve(async (req) => {
@@ -15,7 +15,7 @@ serve(async (req) => {
   try {
     // Authenticate admin user
     const admin = await authenticateAdmin(req);
-    
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -40,14 +40,11 @@ serve(async (req) => {
       stock: stock ? parseInt(stock) : 0
     };
 
-    // Try different column name variations
+    // Use correct database column name: 'imageurl' (lowercase, no underscore)
     if (imageUrl) {
-      // Try the most common variations
-      updateData.imageUrl = imageUrl; // camelCase
-      // updateData.image_url = imageUrl; // snake_case
-      // updateData.imageurl = imageUrl; // lowercase
+      updateData.imageurl = imageUrl; // Database uses lowercase
     }
-    
+
     // Add image_path if provided
     if (image_path) {
       updateData.image_path = image_path;
@@ -63,29 +60,29 @@ serve(async (req) => {
 
     if (error) {
       console.error('Update error:', error);
-      
+
       // OPTION 2: If update fails, try without imageUrl
       if (error.message.includes('imageUrl')) {
         console.log('Retrying without imageUrl...');
         delete updateData.imageUrl;
         // delete updateData.image_url;
         // delete updateData.imageurl;
-        
+
         const { data: retryData, error: retryError } = await supabaseClient
           .from('products')
           .update([updateData])
           .eq('id', productId)
           .select();
-          
+
         if (retryError) {
           throw retryError;
         }
-        
+
         return new Response(
-          JSON.stringify({ 
-            success: true, 
+          JSON.stringify({
+            success: true,
             data: retryData,
-            warning: 'Product updated without image due to schema issues' 
+            warning: 'Product updated without image due to schema issues'
           }),
           { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );

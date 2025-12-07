@@ -6,6 +6,7 @@ import { corsHeaders } from '../_shared/cors.ts';
 import { supabaseAdmin } from '../_shared/supabaseClient.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { authenticateUser } from '../_shared/auth.ts';
+import { successResponse, handleError } from '../_shared/response.ts';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -13,110 +14,135 @@ serve(async (req) => {
   }
 
   try {
-    const { order } = await req.json(); // { productId, quantity }
+    console.log("=== START create-product-order DEBUG ===");
 
-    // Log incoming request for debugging
-    console.log("📥 create-product-order called with:", { order });
+    // Log raw request
+    const requestBody = await req.text();
+    console.log("📥 Raw request body:", requestBody);
 
-    // Validate input
-    if (!order.productId || !order.quantity) {
-      throw new Error("Product ID and quantity are required.");
-    }
+    // Parse request
+    const parsedBody = JSON.parse(requestBody);
+    const { order } = parsedBody;
 
-    // Validate quantity is positive integer
-    if (typeof order.quantity !== 'number' || order.quantity < 1 || !Number.isInteger(order.quantity)) {
-      throw new Error("Quantity must be a positive integer.");
-    }
+    console.log("📥 Parsed order:", { order });
 
     // Authenticate user
+    console.log("🔐 Authenticating user...");
     const user = await authenticateUser(req);
+    console.log("👤 Authenticated user result:", { userId: user?.id, hasEmail: !!user?.email });
 
-    // Get user name from correct metadata field
-    const userName = user.name || user.email || 'Unknown Customer';
-    console.log("👤 User info:", { userId: user.id, userName });
+    // Validate input
+    if (!order) {
+      throw new Error("Order data is missing");
+    }
 
-    // ATOMIC STOCK DECREMENT: Single query ensures no race condition
-    // Try to decrement the stock only if sufficient quantity exists
-    const { data: updatedProduct, error: atomicError } = await supabaseAdmin
+    if (!order.productId) {
+      throw new Error("Product ID is required");
+    }
+
+    if (!order.quantity) {
+      throw new Error("Quantity is required");
+    }
+
+    // Validate user
+    if (!user || !user.id) {
+      throw new Error("User authentication failed - no user ID");
+    }
+
+    console.log("📦 Fetching product details...");
+    // Fetch product details
+    const { data: product, error: productError } = await supabaseAdmin
       .from('products')
-      .update({ stock: supabaseAdmin.rpc ? undefined : undefined }) // placeholder to satisfy TS
-      .select('id, stock')
+      .select('name, price, stock')
       .eq('id', order.productId)
-      .gte('stock', order.quantity)
-      .select();
+      .single();
 
-    // NOTE: Supabase JS doesn't support arithmetic in update directly; use SQL RPC instead.
-    // We'll call a Postgres function via RPC to perform an atomic decrement.
-    // Fallback: If the above "update with gte" isn't supported as intended, use RPC exclusively.
-    let decremented = false;
-    let productBeforeDecrement: { id: string; stock: number } | null = null;
-
-    if (!atomicError && Array.isArray(updatedProduct) && updatedProduct.length > 0) {
-      // This branch is kept for potential future SDK support; actual decrement will be done via RPC below
+    if (productError) {
+      console.error("Product fetch error:", productError);
+      throw new Error(`Product fetch failed: ${productError.message}`);
     }
 
-    // Prefer RPC for atomicity: decrement stock if available and return new stock
-    const { data: rpcResult, error: rpcError } = await supabaseAdmin.rpc('decrement_product_stock', {
-      p_product_id: order.productId,
-      p_quantity: order.quantity
-    });
-
-    if (rpcError) {
-      throw new Error(`Failed to update stock: ${rpcError.message}`);
+    if (!product) {
+      throw new Error("Product not found with ID: " + order.productId);
     }
 
-    if (!rpcResult || rpcResult.updated !== true) {
-      const available = rpcResult?.available ?? 0;
-      throw new Error(`Insufficient stock. Only ${available} items available.`);
+    console.log("🛍️ Product found:", { name: product.name, stock: product.stock, price: product.price });
+
+    // Check stock availability
+    if (product.stock < order.quantity) {
+      throw new Error(`Insufficient stock. Available: ${product.stock}, Requested: ${order.quantity}`);
     }
 
-    decremented = true;
-    productBeforeDecrement = { id: order.productId, stock: rpcResult.previous_stock };
-
-    // Step 2: Create the order
-    console.log("📦 Creating order with data:", {
-      product_id: order.productId,
-      quantity: order.quantity,
-      user_id: user.id,
-      username: userName,
-      status: 'Reserved',
-      timestamp: new Date().toISOString()
-    });
-
+    console.log("📝 Creating order record...");
+    // Create order record
     const { data: newOrder, error: orderError } = await supabaseAdmin
       .from('product_orders')
       .insert({
-        product_id: order.productId,  // database column is product_id
+        product_id: order.productId,
+        user_id: user.id,
+        // user_name column removed in migration
         quantity: order.quantity,
-        user_id: user.id,             // database column is user_id
-        username: userName,           // database column is username (lowercase!)
-        status: 'Reserved',
+        status: 'pending',
         timestamp: new Date().toISOString()
       })
       .select()
       .single();
 
     if (orderError) {
-      console.error("❌ Order creation failed:", orderError);
-      // Rollback: Restore stock if order creation fails
-      await supabaseAdmin
-        .from('products')
-        .update({ stock: product.stock })
-        .eq('id', order.productId);
+      console.error("Order creation error:", orderError);
       throw new Error(`Order creation failed: ${orderError.message}`);
     }
 
-    console.log("✅ Order created successfully:", newOrder);
+    // Validate newOrder
+    if (!newOrder || !newOrder.id) {
+      throw new Error("Failed to create order record - no ID returned");
+    }
 
-    return new Response(JSON.stringify(newOrder), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 201,
-    });
+    console.log("✅ Order created:", { orderId: newOrder.id });
+
+    console.log("📉 Updating product stock...");
+    // Update product stock
+    const { error: stockError } = await supabaseAdmin
+      .from('products')
+      .update({ stock: product.stock - order.quantity })
+      .eq('id', order.productId);
+
+    if (stockError) {
+      console.error("Stock update error:", stockError);
+      throw new Error(`Stock update failed: ${stockError.message}`);
+    }
+
+    console.log("🔔 Creating notifications...");
+    // Create notification for admins
+    const { data: admins } = await supabaseAdmin
+      .from('app_users')
+      .select('id')
+      .eq('role', 'admin');
+
+    if (admins && admins.length > 0) {
+      const notifications = admins.map(admin => ({
+        recipient_id: admin.id,
+        type: 'NEW_ORDER',
+        message: `New order: ${user.email ? user.email.split('@')[0] : 'Unknown User'} ordered ${order.quantity}x ${product.name}`,
+        payload: { orderId: newOrder.id }
+      }));
+
+      const { error: notificationError } = await supabaseAdmin
+        .from('notifications')
+        .insert(notifications);
+
+      if (notificationError) {
+        console.error("Failed to create notifications:", notificationError.message);
+      }
+    }
+
+    console.log("✅ Order created successfully:", newOrder.id);
+    console.log("=== END create-product-order DEBUG ===");
+
+    return successResponse(newOrder, 201);
   } catch (error) {
     console.error("💥 Error creating product order:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
-    });
+    console.log("=== ERROR END create-product-order DEBUG ===");
+    return handleError(error, "create-product-order");
   }
 });

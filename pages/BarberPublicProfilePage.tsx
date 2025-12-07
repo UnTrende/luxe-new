@@ -7,7 +7,6 @@ import { resolveBarberPhoto } from '../services/imageResolver';
 
 const BarberPublicProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const [barber, setBarber] = useState<Barber | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -28,7 +27,7 @@ const BarberPublicProfilePage: React.FC = () => {
   }, [id]);
 
   if (loading) {
-    return <div className="text-center p-12"><Loader size={48} className="animate-spin mx-auto text-dubai-gold" /></div>;
+    return <div className="text-center p-12"><Loader /></div>;
   }
   if (!barber) {
     return <div className="text-center text-red-400 text-xl p-12">Artist not found.</div>;

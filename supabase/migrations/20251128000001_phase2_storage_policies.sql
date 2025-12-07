@@ -19,6 +19,15 @@ ON CONFLICT (id) DO NOTHING;
 
 -- 2. RLS Policies for 'luxecut-public' (Services, Products, Site Assets)
 -- Everyone can view
+DROP POLICY IF EXISTS "Public Access" ON storage.objects;
+DROP POLICY IF EXISTS "Admin Upload Public" ON storage.objects;
+DROP POLICY IF EXISTS "Admin Update Public" ON storage.objects;
+DROP POLICY IF EXISTS "Admin Delete Public" ON storage.objects;
+DROP POLICY IF EXISTS "Public Access Photos" ON storage.objects;
+DROP POLICY IF EXISTS "Barber Upload Own Photos" ON storage.objects;
+DROP POLICY IF EXISTS "Barber Manage Own Photos" ON storage.objects;
+DROP POLICY IF EXISTS "Admin Manage All Photos" ON storage.objects;
+DROP POLICY IF EXISTS "Admin Full Access" ON storage.objects;
 CREATE POLICY "Public Access" ON storage.objects
   FOR SELECT USING (bucket_id = 'luxecut-public');
 

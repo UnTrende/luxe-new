@@ -15,7 +15,7 @@ serve(async (req) => {
   try {
     // Authenticate user
     const user = await authenticateUser(req);
-    
+
     const { orderId } = await req.json();
     if (!orderId) {
       throw new Error("Order ID is required.");
@@ -28,10 +28,10 @@ serve(async (req) => {
         id,
         productId:product_id,
         userId:user_id,
-        userName:username,
         quantity,
         status,
         timestamp,
+        app_users (id, email, name),
         products (name, imageUrl:imageurl, price)
       `)
       .eq('id', orderId)

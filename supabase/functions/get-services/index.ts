@@ -5,6 +5,7 @@ import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { supabaseAdmin } from '../_shared/supabaseClient.ts';
 import { authenticateUser } from '../_shared/auth.ts';
+import { successResponse, handleError } from '../_shared/response.ts';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -17,21 +18,22 @@ serve(async (req) => {
     
     const { data: services, error } = await supabaseAdmin
       .from('services')
-      .select('*')
-      .order('name', { ascending: true });
+      .select('id, name, duration, price, category, image_url, image_path, storage_bucket, loyalty_points')
+      .eq('active', true); // Only fetch active services
 
-    if (error) {
-      throw error;
-    }
+    if (error) throw error;
 
-    return new Response(JSON.stringify(services), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
-    });
+    // Normalize data
+    const normalizedServices = (services || []).map(service => ({
+      ...service,
+      price: Number(service.price) || 0,
+      duration: Number(service.duration) || 0,
+      loyalty_points: Number(service.loyalty_points) || 0
+    }));
+
+    return successResponse(normalizedServices, 200);
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
-    });
+    console.error('Error fetching services:', error);
+    return handleError(error, 'get-services');
   }
 });

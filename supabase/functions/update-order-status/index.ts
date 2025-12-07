@@ -8,7 +8,7 @@ serve(async (req) => {
             headers: {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Methods': 'POST',
-                'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+                'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, X-CSRF-Token',
             },
         });
     }
@@ -89,12 +89,21 @@ serve(async (req) => {
             }
         }
 
-        // Update order status
+        // Update order status (removed updated_at since it doesn't exist in the table)
         const { data, error } = await supabaseAdmin
             .from('product_orders')
-            .update({ status: newStatus, updated_at: new Date().toISOString() })
+            .update({ status: newStatus })
             .eq('id', orderId)
-            .select()
+            .select(`
+                id,
+                product_id,
+                user_id,
+                quantity,
+                status,
+                timestamp,
+                app_users (id, email, name),
+                products (id, name, price, imageurl)
+            `)
             .single();
 
         if (error) {

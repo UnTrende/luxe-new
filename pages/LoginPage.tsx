@@ -141,16 +141,8 @@ const LoginPage: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!email || !password || (!isLoginMode && !name)) {
-            console.log('📱 LoginPage: Validation failed', { email: !!email, password: !!password, name: !!name });
-            setError("Please fill in all required fields.");
-            setLoading(false);
-            return;
-        }
-
-        console.log('📱 LoginPage: Form submitted', { isLoginMode, email, hasPassword: !!password });
         setLoading(true);
-        setError('');
+        setError(''); // Clear previous errors
 
         try {
             console.log('📱 LoginPage: Starting authentication...');

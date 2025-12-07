@@ -13,40 +13,31 @@ serve(async (req) => {
 
   try {
     // 1. Authenticate user and check for admin role
-    const client = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
-    );
-    const { data: { user }, error: userError } = await client.auth.getUser();
-    if (userError) throw userError;
-    if (!user || user.app_metadata.role !== 'admin') {
-      throw new Error("Unauthorized: Admin access required.");
-    }
-    
+    const admin = await authenticateAdmin(req);
+
     // 2. Fetch all bookings
     const { data: bookings, error } = await supabaseAdmin
-        .from('bookings')
-        .select('*')
-        .order('date', { ascending: false })
-        .order('timeslot', { ascending: false });
-        
+      .from('bookings')
+      .select('*')
+      .order('date', { ascending: false })
+      .order('timeslot', { ascending: false });
+
     if (error) throw error;
 
     // Map to consistent camelCase format (same as barber endpoint)
     const mappedBookings = bookings.map(booking => ({
-        id: booking.id,
-        userId: booking.user_id,
-        userName: booking.username,
-        barberId: booking.barber_id,
-        serviceIds: booking.service_ids,
-        date: booking.date,
-        timeSlot: booking.timeslot,
-        totalPrice: booking.totalprice,
-        status: booking.status,
-        reviewLeft: booking.reviewleft,
-        cancelMessage: booking.cancelmessage,
-        createdAt: booking.created_at || booking.date  // Add created_at with fallback
+      id: booking.id,
+      userId: booking.user_id,
+      userName: booking.username,
+      barberId: booking.barber_id,
+      serviceIds: booking.service_ids,
+      date: booking.date,
+      timeSlot: booking.timeslot,
+      totalPrice: booking.totalprice,
+      status: booking.status,
+      reviewLeft: booking.reviewleft,
+      cancelMessage: booking.cancelmessage,
+      createdAt: booking.created_at || booking.date  // Add created_at with fallback
     }));
 
     return new Response(JSON.stringify(mappedBookings), {

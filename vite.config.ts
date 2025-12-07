@@ -42,6 +42,7 @@ export default defineConfig(({ mode }) => {
             // Admin portal (separate chunk)
             'admin': [
               './pages/AdminDashboardPageNew.tsx',
+              './pages/AdminLoyaltySettingsPage.tsx',
             ],
 
             // Barber portal (separate chunk)
@@ -65,8 +66,7 @@ export default defineConfig(({ mode }) => {
     },
 
     define: {
-      'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+      // API_KEY removed
     },
     resolve: {
       alias: {

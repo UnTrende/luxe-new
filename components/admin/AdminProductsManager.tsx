@@ -111,8 +111,8 @@ export const AdminProductsManager: React.FC<AdminProductsManagerProps> = ({ prod
     };
 
     const filteredProducts = products.filter(p =>
-        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (p.categories?.[0] || '').toLowerCase().includes(searchTerm.toLowerCase())
+        (p.name && p.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        ((p.categories?.[0] || '').toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
     return (
@@ -238,13 +238,12 @@ export const AdminProductsManager: React.FC<AdminProductsManagerProps> = ({ prod
                                     </label>
                                     <div className="bg-black/20 rounded-xl p-2 border border-white/5">
                                         <ImageUpload
-                                            onImageUploaded={(publicUrl: string, imagePath: string) => {
+                                            onImageUpload={(imagePath: string, publicUrl: string) => {
                                                 setProductImagePath(imagePath);
                                                 setProductImageUrl(publicUrl);
                                             }}
-                                            currentImageUrl={productImageUrl || currentProduct?.imageUrl || currentProduct?.image_url}
+                                            currentImage={productImageUrl || currentProduct?.imageUrl || currentProduct?.image_url}
                                             bucket="luxecut-public"
-                                            folder="products"
                                             entityType="product"
                                             entityId={currentProduct?.id}
                                         />

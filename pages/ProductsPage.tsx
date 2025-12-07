@@ -70,11 +70,19 @@ const ProductsPage: React.FC = () => {
               <div className="relative overflow-hidden rounded-3xl bg-card-bg">
                 {/* Image - Takes up significant height */}
                 <div className="aspect-[3/4] w-full relative">
-                  <img
-                    src={product.imageUrl || 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800&auto=format&fit=crop'}
-                    alt={product.name}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
+                  {/* Only show image if it exists in database, no fallback */}
+                  {product.imageUrl ? (
+                    <img
+                      src={product.imageUrl}
+                      alt={product.name}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                  ) : (
+                    // Show a placeholder div when no image is available
+                    <div className="w-full h-full bg-gray-200 border-2 border-dashed rounded-xl flex items-center justify-center">
+                      <span className="text-gray-500">No Image</span>
+                    </div>
+                  )}
 
                   {/* Overlay Gradient */}
                   <div className="absolute inset-0 bg-gradient-to-t from-midnight via-transparent to-transparent opacity-60" />

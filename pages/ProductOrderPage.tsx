@@ -5,6 +5,7 @@ import { Plus, Minus, ShoppingCart, Loader } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../services/api';
+import { resolveProductImage } from '../services/imageResolver';
 
 const ProductOrderPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();

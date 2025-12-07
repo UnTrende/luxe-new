@@ -5,6 +5,7 @@ import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { supabaseAdmin } from '../_shared/supabaseClient.ts';
 import { authenticateUser } from '../_shared/auth.ts';
+import { successResponse, handleError } from '../_shared/response.ts';
 
 serve(async (req) => {
   // This is needed if you're planning to invoke your function from a browser.
@@ -40,15 +41,9 @@ serve(async (req) => {
       services: barber.barber_services || []
     }));
 
-    return new Response(JSON.stringify(barbersWithServices), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
-    });
+    return successResponse(barbersWithServices, 200);
   } catch (error) {
     console.error("Error in get-barbers function:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
-    });
+    return handleError(error, "get-barbers");
   }
 });

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import GoldConfetti from './GoldConfetti';
+import { bookingSchema } from '../utils/validation';
 
 interface ConfirmationStepProps {
   barber: any;
@@ -81,6 +82,18 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
         userName: user.name || user.email || 'Customer',
         userId: user.id
       };
+
+      // Validate Booking Data
+      const validation = bookingSchema.safeParse({
+        barberId: bookingDetails.barberId,
+        serviceIds: bookingDetails.serviceIds,
+        date: bookingDetails.date,
+        timeSlot: bookingDetails.timeSlot
+      });
+
+      if (!validation.success) {
+        throw new Error(validation.error.errors[0].message);
+      }
 
       await api.createBooking(bookingDetails);
 

@@ -1,6 +1,9 @@
 import React from 'react';
 import { Service, Product, Barber, UserProfile, Booking, OrderWithDetails, Attendance } from '../../types';
-import { BarChart3, TrendingUp, Users, ShoppingBag, Calendar, Clock, DollarSign, Package, CheckCircle, AlertCircle } from 'lucide-react';
+import { BarChart3, TrendingUp, Users, ShoppingBag, Calendar, Clock, DollarSign, Package, CheckCircle, AlertCircle, Download, PieChart as PieIcon, Activity } from 'lucide-react';
+import { api } from '../../services/api';
+import { AnalysisBarChart, AnalysisLineChart, AnalysisPieChart } from './AnalyticsCharts';
+import { toast } from 'react-toastify';
 
 interface Stats {
     totalRevenue: number;
@@ -30,8 +33,56 @@ export const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({
     rosters,
     orders,
     attendanceRecords,
-    stats
+    stats: initialStats
 }) => {
+    const [analyticsData, setAnalyticsData] = React.useState<any>(null);
+    const [detailedReport, setDetailedReport] = React.useState<any>(null);
+    const [loading, setLoading] = React.useState(false);
+
+    React.useEffect(() => {
+        loadAnalytics();
+    }, []);
+
+    const loadAnalytics = async () => {
+        setLoading(true);
+        try {
+            const [overview, retention] = await Promise.all([
+                api.getAnalyticsOverview(),
+                api.getDetailedReports('retention')
+            ]);
+            setAnalyticsData(overview);
+            setDetailedReport(retention);
+        } catch (error) {
+            console.error('Analytics load failed:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleExport = async (entity: 'bookings' | 'orders' | 'users') => {
+        try {
+            toast.info(`Exporting ${entity}...`);
+            const { csv, filename } = await api.exportData(entity, 'csv');
+
+            // Create Blob and download
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            toast.success(`${entity} exported successfully!`);
+        } catch (error) {
+            console.error('Export failed:', error);
+            toast.error('Export failed. Please try again.');
+        }
+    };
+
+    // Use server stats if available, else fall back to props
+    const displayStats = analyticsData?.stats || initialStats;
+    const topServices = analyticsData?.charts?.topServices || [];
+
     return (
         <div className="space-y-8">
             {/* Header */}
@@ -175,16 +226,16 @@ export const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({
                         <div className="text-center p-6 bg-gradient-to-br from-gold/20 to-transparent rounded-2xl border border-gold/20">
                             <p className="text-subtle-text text-xs font-bold uppercase tracking-widest mb-2">Total Revenue</p>
                             <h4 className="text-3xl font-serif font-bold text-white">
-                                ${stats.totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                ${(displayStats.totalRevenue || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                             </h4>
                         </div>
 
                         <div className="space-y-4">
                             <div className="flex justify-between items-center p-3 bg-white/5 rounded-xl border border-white/5">
                                 <span className="text-subtle-text text-sm">Weekly Growth</span>
-                                <span className={`font-bold flex items-center gap-1 ${Number(stats.weeklyGrowth) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                    {Number(stats.weeklyGrowth) >= 0 ? <TrendingUp size={14} /> : <TrendingUp size={14} className="rotate-180" />}
-                                    {Number(stats.weeklyGrowth) >= 0 ? '+' : ''}{stats.weeklyGrowth}%
+                                <span className={`font-bold flex items-center gap-1 ${Number(displayStats.weeklyGrowth) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                    {Number(displayStats.weeklyGrowth) >= 0 ? <TrendingUp size={14} /> : <TrendingUp size={14} className="rotate-180" />}
+                                    {Number(displayStats.weeklyGrowth) >= 0 ? '+' : ''}{displayStats.weeklyGrowth}%
                                 </span>
                             </div>
                             <div className="flex justify-between items-center p-3 bg-white/5 rounded-xl border border-white/5">
@@ -195,6 +246,70 @@ export const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            {/* Charts Section */}
+            <div className="grid gap-6 md:grid-cols-2">
+                <div className="bg-glass-card rounded-3xl border border-white/10 p-6">
+                    <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                        <Activity size={18} className="text-gold" />
+                        Top Services
+                    </h3>
+                    <AnalysisBarChart data={topServices} xAxisKey="name" />
+                </div>
+
+                <div className="bg-glass-card rounded-3xl border border-white/10 p-6">
+                    <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                        <PieIcon size={18} className="text-gold" />
+                        Customer Retention
+                    </h3>
+                    {detailedReport?.overview ? (
+                        <div className="flex items-center justify-center h-64">
+                            <div className="space-y-4 text-center">
+                                <div className="flex justify-center gap-8">
+                                    <div className="text-center">
+                                        <p className="text-2xl font-bold text-white">{detailedReport.overview.single}</p>
+                                        <p className="text-xs text-subtle-text">One-time</p>
+                                    </div>
+                                    <div className="text-center">
+                                        <p className="text-2xl font-bold text-gold">{detailedReport.overview.repeat}</p>
+                                        <p className="text-xs text-subtle-text">Returning</p>
+                                    </div>
+                                </div>
+                                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                                    <p className="text-sm text-subtle-text">Retention Rate</p>
+                                    <p className="text-3xl font-bold text-green-400">
+                                        {Number(detailedReport.retentionRate || 0).toFixed(1)}%
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="flex items-center justify-center h-64 text-subtle-text">Loading retention data...</div>
+                    )}
+                </div>
+            </div>
+
+            {/* Export Section */}
+            <div className="bg-glass-card rounded-3xl border border-white/10 p-8">
+                <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                    <Download size={18} className="text-gold" />
+                    Data Export
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button onClick={() => handleExport('bookings')} className="flex items-center justify-center gap-3 p-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all group">
+                        <Calendar className="text-gold group-hover:scale-110 transition-transform" />
+                        <span className="font-bold text-sm">Export Bookings (CSV)</span>
+                    </button>
+                    <button onClick={() => handleExport('orders')} className="flex items-center justify-center gap-3 p-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all group">
+                        <Package className="text-gold group-hover:scale-110 transition-transform" />
+                        <span className="font-bold text-sm">Export Orders (CSV)</span>
+                    </button>
+                    <button onClick={() => handleExport('users')} className="flex items-center justify-center gap-3 p-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all group">
+                        <Users className="text-gold group-hover:scale-110 transition-transform" />
+                        <span className="font-bold text-sm">Export Users (CSV)</span>
+                    </button>
                 </div>
             </div>
         </div>

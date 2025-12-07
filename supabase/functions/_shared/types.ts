@@ -1,4 +1,4 @@
-import { RealtimeChannel, Session } from '@supabase/supabase-js';
+import { RealtimeChannel, Session } from 'https://esm.sh/@supabase/supabase-js@2';
 
 export interface BarberService {
   serviceId: string;
@@ -195,6 +195,7 @@ export interface LoyaltySettings {
 // API Interface
 export interface Api {
   // Public Data Fetching
+  fetchCSRFToken: () => Promise<string | null>;
   getBarbers: () => Promise<Barber[]>;
   getBarberById: (id: string) => Promise<Barber | null>;
   getProducts: () => Promise<Product[]>;
@@ -295,7 +296,7 @@ export interface Api {
   }>;
   getBarberIdByUserId: (userId: string) => Promise<string | null>;
   supabase: any; // Add the supabase client property
-  
+
   // Loyalty System
   getLoyaltyStats: () => Promise<LoyaltyStats>;
   getLoyaltyHistory: (limit?: number, offset?: number) => Promise<LoyaltyHistoryEntry[]>;
@@ -303,4 +304,9 @@ export interface Api {
   processLoyaltyTransaction: (bookingId: string, amountPaid: number) => Promise<any>;
   processPenaltyTransaction: (userId: string, penaltyType: 'late_cancellation' | 'no_show', bookingId?: string, reason?: string) => Promise<any>;
   checkLoyaltyTierUpdate: () => Promise<any>;
+
+  // Analytics & Export
+  getAnalyticsOverview: () => Promise<any>;
+  getDetailedReports: (reportType: 'retention' | 'peak_times', dateRange?: any) => Promise<any>;
+  exportData: (entity: 'bookings' | 'orders' | 'users', format?: 'csv') => Promise<{ csv: string; filename: string }>;
 }

@@ -4,7 +4,7 @@ import { authenticateAdmin } from '../_shared/auth.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, X-CSRF-Token',
 };
 
 serve(async (req) => {
@@ -15,7 +15,7 @@ serve(async (req) => {
   try {
     // Authenticate admin user
     const admin = await authenticateAdmin(req);
-    
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -64,8 +64,8 @@ serve(async (req) => {
           tableName = 'products';
           updateData = {
             image_path: path,
-            // Try to set standard image_url if it exists (schema standardization)
-            image_url: publicUrl
+            // Database column is 'imageurl' (lowercase, no underscore)
+            imageurl: publicUrl
           };
           break;
         case 'barber':

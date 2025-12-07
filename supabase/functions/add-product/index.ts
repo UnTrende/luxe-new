@@ -4,7 +4,7 @@ import { authenticateAdmin } from '../_shared/auth.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, X-CSRF-Token',
 };
 
 serve(async (req) => {
@@ -15,7 +15,7 @@ serve(async (req) => {
   try {
     // Authenticate admin user
     const admin = await authenticateAdmin(req);
-    
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -31,25 +31,20 @@ serve(async (req) => {
       );
     }
 
-    // OPTION 1: Try with different column name variations
+    // Only use columns that exist in the database: name, price, description, categories, stock, imageurl, image_path
     let insertData: any = {
       name: name.toString(),
       price: parseFloat(price),
       description: description?.toString() || '',
       categories: categories || [],
-      stock: stock ? parseInt(stock) : 0,
-      category: categories && categories.length > 0 ? categories[0] : '',
-      stock_quantity: stock ? parseInt(stock) : 0
+      stock: stock ? parseInt(stock) : 0
     };
 
-    // Try different column name variations
+    // Use correct database column name: 'imageurl' (lowercase, no underscore)
     if (imageUrl) {
-      // Try the most common variations
-      insertData.imageUrl = imageUrl; // camelCase
-      insertData.image_url = imageUrl; // snake_case
-      insertData.imageurl = imageUrl; // lowercase
+      insertData.imageurl = imageUrl;
     }
-    
+
     // Add image_path if provided
     if (image_path) {
       insertData.image_path = image_path;
@@ -64,28 +59,28 @@ serve(async (req) => {
 
     if (error) {
       console.error('Insert error:', error);
-      
+
       // OPTION 2: If insert fails, try without imageUrl
       if (error.message.includes('imageUrl')) {
         console.log('Retrying without imageUrl...');
         delete insertData.imageUrl;
         // delete insertData.image_url;
         // delete insertData.imageurl;
-        
+
         const { data: retryData, error: retryError } = await supabaseClient
           .from('products')
           .insert([insertData])
           .select();
-          
+
         if (retryError) {
           throw retryError;
         }
-        
+
         return new Response(
-          JSON.stringify({ 
-            success: true, 
+          JSON.stringify({
+            success: true,
             data: retryData,
-            warning: 'Product saved without image due to schema issues' 
+            warning: 'Product saved without image due to schema issues'
           }),
           { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );

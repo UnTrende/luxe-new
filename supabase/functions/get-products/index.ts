@@ -5,6 +5,7 @@ import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { supabaseAdmin } from '../_shared/supabaseClient.ts';
 import { authenticateUser } from '../_shared/auth.ts';
+import { successResponse, handleError } from '../_shared/response.ts';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -17,7 +18,7 @@ serve(async (req) => {
     
     const { data: products, error } = await supabaseAdmin
       .from('products')
-      .select('id, name, description, categories, price, imageUrl:imageurl, stock')
+      .select('id, name, description, categories, price, imageUrl:imageurl, image_path, storage_bucket, stock')
       .order('name', { ascending: true });
 
     if (error) {
@@ -32,14 +33,9 @@ serve(async (req) => {
       categories: Array.isArray(product.categories) ? product.categories : []
     }));
 
-    return new Response(JSON.stringify(normalizedProducts), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
-    });
+    return successResponse(normalizedProducts, 200);
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
-    });
+    console.error('Error fetching products:', error);
+    return handleError(error, 'get-products');
   }
 });

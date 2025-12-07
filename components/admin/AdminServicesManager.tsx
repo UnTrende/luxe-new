@@ -260,13 +260,12 @@ export const AdminServicesManager: React.FC<AdminServicesManagerProps> = ({ serv
                                 <label className="block text-xs font-bold uppercase tracking-widest text-subtle-text mb-2">Service Image</label>
                                 <div className="bg-black/20 rounded-xl p-2 border border-white/5">
                                     <ImageUpload
-                                        currentImageUrl={serviceImageUrl || currentService?.image_url}
-                                        onImageUploaded={(url, path) => {
+                                        currentImage={serviceImageUrl || currentService?.image_url}
+                                        onImageUpload={(path, url) => {
                                             setServiceImageUrl(url);
                                             setServiceImagePath(path);
                                         }}
                                         bucket="luxecut-public"
-                                        folder="services"
                                         entityType="service"
                                         entityId={currentService?.id}
                                     />

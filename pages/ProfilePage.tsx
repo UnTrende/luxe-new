@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { User, Mail, LogOut, CreditCard, Settings, HelpCircle, Shield, Star, Calendar, Scissors, TrendingUp } from 'lucide-react';
+import { User, Mail, LogOut, CreditCard, Settings, HelpCircle, Shield, Star, Calendar, Scissors, TrendingUp, Package } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../services/api';
-import { BookingWithDetails, LoyaltyStats } from '../types';
+import { BookingWithDetails, LoyaltyStats, OrderWithDetails } from '../types';
+import OrderTracking from '../components/OrderTracking';
 
 const ProfilePage: React.FC = () => {
     const navigate = useNavigate();
@@ -15,6 +16,8 @@ const ProfilePage: React.FC = () => {
     const [isLoadingBookings, setIsLoadingBookings] = useState(true);
     const [loyaltyStats, setLoyaltyStats] = useState<LoyaltyStats | null>(null);
     const [isLoadingLoyalty, setIsLoadingLoyalty] = useState(true);
+    const [recentOrders, setRecentOrders] = useState<OrderWithDetails[]>([]);
+    const [isLoadingOrders, setIsLoadingOrders] = useState(true);
 
     const handleLogout = async () => {
         await signOut();
@@ -54,6 +57,21 @@ const ProfilePage: React.FC = () => {
                 } finally {
                     setIsLoadingLoyalty(false);
                 }
+
+                try {
+                    // Fetch recent orders (limit to 3 most recent)
+                    setIsLoadingOrders(true);
+                    const orders = await api.getMyOrders();
+                    const sortedOrders = orders.sort((a, b) =>
+                        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+                    );
+                    setRecentOrders(sortedOrders.slice(0, 3));
+                } catch (error) {
+                    console.error('Error fetching recent orders:', error);
+                    setRecentOrders([]);
+                } finally {
+                    setIsLoadingOrders(false);
+                }
             };
             fetchData();
         }
@@ -70,20 +88,20 @@ const ProfilePage: React.FC = () => {
     };
 
     const stats = [
-        { 
-            label: 'Bookings', 
-            value: isLoadingBookings ? '...' : bookingCount.toString(), 
-            icon: <Calendar size={14} /> 
+        {
+            label: 'Bookings',
+            value: isLoadingBookings ? '...' : bookingCount.toString(),
+            icon: <Calendar size={14} />
         },
-        { 
-            label: 'Points', 
-            value: isLoadingLoyalty ? '...' : formatPoints(loyaltyStats?.redeemable_points || 0), 
-            icon: <Star size={14} /> 
+        {
+            label: 'Points',
+            value: isLoadingLoyalty ? '...' : formatPoints(loyaltyStats?.redeemable_points || 0),
+            icon: <Star size={14} />
         },
-        { 
-            label: 'Status', 
-            value: isLoadingLoyalty ? '...' : (loyaltyStats?.status_tier || 'Silver'), 
-            icon: <Shield size={14} /> 
+        {
+            label: 'Status',
+            value: isLoadingLoyalty ? '...' : (loyaltyStats?.status_tier || 'Silver'),
+            icon: <Shield size={14} />
         },
     ];
 
@@ -157,9 +175,8 @@ const ProfilePage: React.FC = () => {
                                     navigate('/profile/loyalty-history');
                                 }
                             }}
-                            className={`bg-glass-card border border-white/5 p-4 rounded-2xl flex flex-col items-center justify-center gap-2 backdrop-blur-md transition-all ${
-                                (stat.label === 'Points' || stat.label === 'Status') ? 'hover:border-gold/30 cursor-pointer' : 'cursor-default'
-                            }`}
+                            className={`bg-glass-card border border-white/5 p-4 rounded-2xl flex flex-col items-center justify-center gap-2 backdrop-blur-md transition-all ${(stat.label === 'Points' || stat.label === 'Status') ? 'hover:border-gold/30 cursor-pointer' : 'cursor-default'
+                                }`}
                         >
                             <div className="text-gold opacity-80">{stat.icon}</div>
                             <div className="text-center">
@@ -182,13 +199,13 @@ const ProfilePage: React.FC = () => {
                                 {loyaltyStats.visits_to_next_tier} {loyaltyStats.visits_to_next_tier === 1 ? 'visit' : 'visits'} away
                             </span>
                         </div>
-                        
+
                         {/* Progress Bar */}
                         <div className="relative w-full h-2 bg-white/5 rounded-full overflow-hidden">
-                            <div 
+                            <div
                                 className="absolute top-0 left-0 h-full bg-gold-gradient transition-all duration-500"
-                                style={{ 
-                                    width: `${Math.min(100, (loyaltyStats.total_confirmed_visits / (loyaltyStats.total_confirmed_visits + loyaltyStats.visits_to_next_tier)) * 100)}%` 
+                                style={{
+                                    width: `${Math.min(100, (loyaltyStats.total_confirmed_visits / (loyaltyStats.total_confirmed_visits + loyaltyStats.visits_to_next_tier)) * 100)}%`
                                 }}
                             />
                         </div>
@@ -214,6 +231,52 @@ const ProfilePage: React.FC = () => {
                         <p className="text-xs text-subtle-text">You've reached the highest tier! Earning {loyaltyStats.tier_benefits.current_points_per_dollar} points per dollar spent.</p>
                     </div>
                 )}
+
+                {/* Order Tracking Section */}
+                <div>
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                            <Package size={20} className="text-gold" />
+                            <h3 className="text-white font-serif font-bold text-lg">Recent Orders</h3>
+                        </div>
+                        {!isLoadingOrders && recentOrders.length > 0 && (
+                            <button
+                                onClick={() => navigate('/my-orders')}
+                                className="text-gold text-sm hover:text-gold/80 transition-colors"
+                            >
+                                View All
+                            </button>
+                        )}
+                    </div>
+
+                    {isLoadingOrders ? (
+                        <div className="bg-glass-card border border-white/5 rounded-2xl p-8 text-center">
+                            <p className="text-subtle-text text-sm">Loading orders...</p>
+                        </div>
+                    ) : recentOrders.length > 0 ? (
+                        <div className="space-y-3">
+                            {recentOrders.map((order) => (
+                                <OrderTracking key={order.id} order={order} compact={true} />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="bg-glass-card border border-white/5 rounded-2xl p-8 text-center">
+                            <div className="w-16 h-16 rounded-full bg-gold/10 flex items-center justify-center mx-auto mb-3">
+                                <Package size={32} className="text-gold/50" />
+                            </div>
+                            <p className="text-white font-medium mb-1">No Orders Yet</p>
+                            <p className="text-subtle-text text-xs mb-4">
+                                Browse our premium grooming products
+                            </p>
+                            <button
+                                onClick={() => navigate('/products')}
+                                className="px-6 py-2 bg-gold text-midnight font-bold rounded-xl hover:brightness-110 transition-all text-sm"
+                            >
+                                Shop Now
+                            </button>
+                        </div>
+                    )}
+                </div>
 
                 {/* Action Grid */}
                 <div>
